@@ -1,0 +1,43 @@
+#######################################
+# Syntax Coloring Map For H4
+#######################################
+
+#######################################
+# Library (KEYWORD1)
+#######################################
+
+H4	KEYWORD1
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+h4	KEYWORD1
+H4_TASK_PTR	KEYWORD1
+H4_TIMER	KEYWORD1
+H4_FN_VOID	KEYWORD1
+H4_FN_COUNT	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+cancel	KEYWORD2
+cancelAll	KEYWORD2
+every	KEYWORD2
+everyRandom	KEYWORD2
+finishEarly	KEYWORD2
+finishIf	KEYWORD2
+finishNow	KEYWORD2
+loop	KEYWORD2
+nTimes	KEYWORD2
+nTimesRandom	KEYWORD2
+once	KEYWORD2
+onceRandom	KEYWORD2
+queueFunction	KEYWORD2
+randomTimes	KEYWORD2
+randomTimesRandom	KEYWORD2
+repeatWhile	KEYWORD2
+repeatWhileEver	KEYWORD2
+#######################################
+# Constants (LITERAL1)
+#######################################
