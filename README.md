@@ -2,7 +2,7 @@
 
 ## Universal functional scheduler / timer with rich API for asynchronous one-off, periodic and random events with event chaining
 
-![flyer](/assets/H4Flyer.jpg)
+![H4 Flyer](/assets/H4flyer.jpg)
 
 ## Introduction
 
@@ -15,18 +15,19 @@ Invokes user-defined callback on event. Callback can be:
 * Lambda function
 * Any C++ functor with operator()() override
 
-All callbacks (type H4_FN_VOID) can take numerous parameters using C++ stdlib bind
-All callbacks take a "chain" function (also type H4_FN_VOID) which is called on completion. "Completion" can occur one of three ways:
+All callbacks (type `H4_FN_VOID`) can take numerous parameters using C++ stdlib bind.
 
-*   Naturally-expiring (e.g. "once") task exits
-*   Free-running (e.g. every*) task is cancelled by user code
+All callbacks take a "chain" function (also type `H4_FN_VOID`) which is called on completion. "Completion" can occur one of three ways:
+
+*   Naturally-expiring (e.g. "`once`") task exits
+*   Free-running (e.g. "`everyXXX`") task is cancelled by user code
 *   Task can terminate itself arbitrarily
 
-Tasks which only "makes sense" if they are unique (e.g. a system "ticker") can declare themselves on creation as a "singleton". Any existing task with the same type and ID will be cancelled and replaced by the new instance, ensuring only one copy is ever in the queue.
+Tasks which only "make sense" if they are unique (e.g. a system "ticker") can declare themselves on creation as a "singleton". Any existing task with the same type and ID will be cancelled and replaced by the new instance, ensuring only one copy is ever in the queue.
 
-All task creators return a "handle" (type H4_TASK_PTR) which can be used to subsequently cancel the task, or ignored if not required
+All task creators return a "handle" (type `H4_TASK_PTR`) which can be used to subsequently cancel the task, or ignored if not required
 
-*NB* with one exception (queueFunction) all task start _after_ the first specificied time interval, do n. Using the infinite task "every(1000..." will invoke the first instance of user callback at Tstart + 1sec
+**N.B.** with one exception (`queueFunction`) all tasks start _after_ the first specifiied time interval. Using the infinite task "`every(1000...`" will invoke the first instance of user callback at Tstart + 1sec (1000 mS).
 
 ## API
 
@@ -34,7 +35,7 @@ All task creators return a "handle" (type H4_TASK_PTR) which can be used to subs
 
 ```cpp
 every   // run task every t milliseconds
-everyRandom // run task continously rescheduling at random time nMin < t < nMax milliseconds
+everyRandom // run task continuously rescheduling at random time nMin < t < nMax milliseconds
 nTimes // run task n times at intervals of t milliseconds 
 nTimesRandom // run task n times rescheduling at random time nMin < t < nMax milliseconds
 once // have a guess
@@ -45,7 +46,9 @@ randomTimesRandom // run task random number of time nMin < n < nMax at random in
 repeatWhile // run task until user-defined "countdown" function (type H4_FN_COUNT) returns zero then cancel
 repeatWhileEver // run task until user-defined "countdown" function (type H4_FN_COUNT) returns zero then rescehule [ Note 1]
 ```
-_Note 1_ The user _*MUST*_ reset, cancel, stop < whatever > the condition that causes the countdown expiry, otherwise an infinite loop will occur and probably crash the MCU. Since `repeatWhile` cancels itself ofter the first occurence of countdown expity this is not an issue, but `repeatWhileEver` reschedules itself, so if the countdown function has not reset itself, it will still be "expired" and so `repeatWhileEver` reschedules itself, so if the countdown function has not reset itself, it will still be "expired" and so `repeatWhileEver`... You get the picture?
+_Note 1_ 
+
+The user _*MUST*_ reset, cancel, stop < whatever > the condition that causes the countdown expiry, otherwise an infinite loop will occur and probably crash the MCU. Since `repeatWhile` cancels itself after the first occurrence of countdown expiry this is not an issue, but `repeatWhileEver` reschedules itself, so if the countdown function has not reset itself, it will still be "expired" and so `repeatWhileEver` reschedules itself, so if the countdown function has not reset itself, it will still be "expired" and so `repeatWhileEver`... You get the picture?
 
 ### Task cancellation:
 
@@ -61,20 +64,21 @@ finishIf // "finishEarly" if user-supplied termination function (type H4_FN_TIF)
 
 ### Globals
 
-User should instantiate an H4 object at globale scope, naming it h4
+User should instantiate an H4 object at global scope, naming it h4
 
 ```cpp
 H4  h4; // can also provide a value for lengthe of Q, default=20, e.g. H4 h4(13);
 
-h4.context // contains the H4_TASK_PTR of the currently scheduled task or `nullptr` if queue empty
+h4.context // contains the H4_TASK_PTR of the currently scheduled task or `nullptr` if Q empty
 
-H4::loop() // must be called in a `while(true)` loop for non-arduinoIDE implemntations. 
+H4::loop() // must be called in a `while(true)` loop for non-arduinoIDE implementations. 
 // In Arduino IDE, do NOT include a "normal" loop() funtion!!!
 ```
 
 ### Things you can do with a context H4_TASK_PTR
 
-*NB* This is an advanced topic for experts only. If you are a beginner, skip to the !(sample code) at the end.
+**N.B.** This is an advanced topic for experts only. If you are a beginner, skip to the [Sample Code](/README.md#example-code-arduino-ide) at the end.
+
 Experts: All usage should be performed with care and _only_ if you really know what you are doing!
 
 #### "Partial Results"
@@ -89,11 +93,12 @@ h4.getPartial(void* d); // fill an l-length block of data (user-defined) into d 
 ````
 
 As you have guessed by now, `h4.context` is simply a task pointer to an item in the Queue. Most methods and members are public, so TAKE CARE.
-`h4.context->partial` is a pointer to the partial results and can be used *IN READ ONLY MODE* in preference to `getPartial()`. *DO NOT* run off the end of it: h4.context->len contains its size in byes saved from `storePartial()`. DO NOT CHANGE THE VALUE OF len!!!
+
+`h4.context->partial` is a pointer to the partial results and can be used *IN READ ONLY MODE* in preference to `getPartial()`. *DO NOT* run off the end of it: `h4.context->len` contains its size in byes saved from `storePartial()`. *DO NOT CHANGE THE VALUE OF len!!!*
 
 #### The many ways to die
 
-The public cancellation methods map onto the follwoing task functions. Since we are talking about code inside a task, you can save a function call by calling these directly on the context pointer, e.g. `h4.context->endK();` will do the same as h4.cancel(); Make this the last call, you cannot rely on anything after it has been called, just get out while you can!
+The public cancellation methods map onto the following task functions. Since we are talking about code inside a task, you can save a function call by calling these directly on the context pointer, e.g. `h4.context->endK();` will do the same as h4.cancel(); Make this the last call, you cannot rely on anything after it has been called, just get out while you can!
 
 ```cpp
 uint32_t 	endF(); // finalise: finishEarly
@@ -117,29 +122,29 @@ Don't use them to "cheat" the system, use the proper public H4 calls for safety.
 H4_FN_VOID     	f; // "It". The task. Your function that gets called on each schedule
 uint32_t        rmin=0; // (usually) the controlling time in mS OR the minimum random time [ see Note 2 ]
 uint32_t        rmax=0; // the maximum random time [ see Note 2 ] 
-H4_FN_COUNT    	reaper; // when this function retrunes zero, the Grim Reaper calls and the task dies a horrible death
-H4_FN_VOID     	chain; // you guessed it...
-uint32_t		uid=0; // unique ID of task
-bool 			singleton=false; // sigh...
-size_t			len=0; // length of partial data
+H4_FN_COUNT     reaper; // when this function retrunes zero, the Grim Reaper calls and the task dies a horrible death
+H4_FN_VOID      chain; // you guessed it...
+uint32_t        uid=0; // unique ID of task
+bool            singleton=false; // sigh...
+size_t          len=0; // length of partial data
 uint32_t        at;  // "due" time [ see note 3 ]
-uint32_t		nrq=0; // numbr of times this task has been RE-QUEUED. Note the "RE-" [ See Note 4 ]
-void*			partial=NULL; // ptr -> Your partial results
+uint32_t        nrq=0; // numbr of times this task has been RE-QUEUED. Note the "RE-" [ See Note 4 ]
+void*           partial=NULL; // ptr -> Your partial results
 ```
 
 _Note 2_
 
-rmin and rmax work together: If it's not a random task, rmin is functionally equivalent to mSec which controls the timer, e.g. `once(30000,...` will have rmin = 30000 and rmax=0. For randomly-timed tasks  they have the min and max values of the randomness. In `queueFunction`, they are both zero, since it never has to wait for any time before it runs f(). There is a special case: when they are equal (but not boh zero) then the "due" time is set to T=100*60*60*24 or a whole days worth of milliseconds, causing the task to be reschudeld at the exact same time tomorrow... allwoing a "`daily(...`" task  - which will be coming soon
+`rmin` and `rmax` work together. If it's not a random task, `rmin` is functionally equivalent to mSec which controls the timer, e.g. `once(30000,...` will have `rmin` = 30000 and `rmax`=0. For randomly-timed tasks  they have the min and max values of the randomness. In `queueFunction`, they are both zero, since it never has to wait for any time before it runs f(). There is a special case: when they are equal (but not both zero) then the "due" time is set to T=100*60*60*24 or a whole day's worth of milliseconds, causing the task to be reschedeled at the exact same time tomorrow... allowing a "`daily(...`" task  - which will be coming soon
 
 _Note 3_
 
-The core of the scheduler runs on an architecture-dependent clock which returns a number of milliseconds T. Whatever T is, H4 adds rmin to it and sets that as the "due" tme, i.e. run this "at" time T+rmin. On every loop, the task at the head of the queue is checked and if `at` is > T+rmin, i.e. the time at which is was due to run has passed, f() is called and the task then makes its reschedule decision.
+The core of the scheduler runs on an architecture-dependent clock which returns a number of milliseconds T. Whatever T is, H4 adds `rmin` to it and sets that as the "due" tme, i.e. run this "at" time T+`rmin`. On every loop, the task at the head of the queue is checked and if `at` is > T+rmin, i.e. the time at which is was due to run has passed, `f()` is called and the task then makes its reschedule decision.
 
-If the reaper returns zero the task cleans up, calls the chain (if any) and deletes itself. If it needs to reschedule, it adds rmin (or `randomRange(rmin,rmax)`) to the due time `at` and copies itself back into the queue.
+If the reaper returns zero the task cleans up, calls the chain (if any) and deletes itself. If it needs to reschedule, it adds `rmin` (or `randomRange(rmin,rmax)`) to the due time `at` and copies itself back into the queue.
 
 _Note 4_
 
-At the end of a task that has run once, it has been schedule, yes but _it has not been RE-queued_ hence `nrq==0`. For all task types except `queueFucntion` the value of `nrq+1` is the number of times that `f()` has been run, being 1 schedule + `nrq` RE-schedules. 
+At the end of a task that has run once, it has been scheduled but _it has not been RE-queued_ hence `nrq==0`. For all task types except `queueFunction` the value of `nrq+1` is the number of times that `f()` has been run, being 1 schedule + `nrq` RE-schedules. 
 
 ## Example code (Arduino IDE)
 
