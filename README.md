@@ -201,4 +201,6 @@ void userLoop(){
 }
 ```
 
+## Output from above (Running on ESp32)
 
+![Output ESp32](/assets/output.jpg)
