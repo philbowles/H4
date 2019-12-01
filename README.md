@@ -1,4 +1,4 @@
-# H4 (Very Alpha - use at your peril!)
+# H4 vn 0.0.1
 
 ## Universal functional scheduler / timer with rich API for asynchronous one-off, periodic and random events with event chaining
 
