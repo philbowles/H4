@@ -1,6 +1,6 @@
 # H4 vn 0.0.1
 
-## Universal functional scheduler / timer with rich API for asynchronous one-off, periodic and random events with event chaining
+## Universal functional scheduler / timer with rich API for asynchronous one-off, periodic and random events with event chaining. Allows identical code on multiple platforms: ArduinoIDE ESP8266, ESP32, STM32NUCLEO-* / STM32CubeIDE HAL F0/1/3/4 / Ubuntu Linux / Raspberry Pi (jessie) 
 
 ![H4 Flyer](/assets/H4flyer.jpg)
 
