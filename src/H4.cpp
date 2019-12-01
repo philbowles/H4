@@ -1,7 +1,6 @@
 /*
  MIT License
 
-
 Copyright (c) 2019 Phil Bowles <H48266@gmail.com>
    github     https://github.com/philbowles/H4
    blog       https://8266iot.blogspot.com
@@ -27,10 +26,23 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-#include "inc/H4.h"
+#include "H4.h"
+
+#ifndef ARDUINO
+	delegateSerial Serial;
+	extern "C" {	
+		int _write(int file, char *data, int len) {
+			#ifdef CUBEIDE
+			   HAL_StatusTypeDef status = HAL_UART_Transmit(&huart3, (uint8_t*)data, len,  0xFFFF);
+			   return (status == HAL_OK ? len : 0);
+			#else
+				return write(1,data,len);
+			#endif
+		}
+	}
+#endif
 
 #ifdef __unix__
-	delegateSerial Serial;
 	
 	void nop(){}
 	
@@ -222,11 +234,7 @@ size_t task::getPartial(void* d){
 }
 
 #ifdef ARDUINO
-    extern "C" {
-    // This must exist to keep the linker happy but is never called.
-    int _gettimeofday( struct timeval *tv, void *tzvp ) {} // end _gettimeofday()
-    }
-    void loop(){  H4::loop();  }
+        void loop(){  H4::loop(); }
 #endif
 
 #define TAG(x) (u+((x)*100))
@@ -260,17 +268,27 @@ H4_TASK_PTR H4::repeatWhileEver(H4_FN_COUNT fncd,uint32_t msec,H4_FN_VOID fn,H4_
 			TAG(13),s);
 }
 
-void H4::loop(){
-//	context=h4.next();
-    if(context=h4.next()){
-        (*context)();
-        context=nullptr;
-    }
-    userLoop();
+#ifndef __cplusplus
+extern "C" {
+#endif
+
+	void H4::loop(){
+	//	context=h4.next();
+		if(context=h4.next()){
+			(*context)();
+			context=nullptr;
+		}
+		userLoop();
+	}
+
+#ifndef __cplusplus
 }
+#endif
+
 //
 //  DIAGNOSTIC
 //
+
 void H4::matchTasks(function<bool(task*)> p,function<void(task*)> f){
     vector<task*> vesta=select(p);
     sort(vesta.begin(),vesta.end(),[](const task* a, const task* b){ return a->at < b->at; });

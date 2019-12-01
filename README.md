@@ -75,9 +75,78 @@ H4::loop() // must be called in a `while(true)` loop for non-arduinoIDE implemen
 // In Arduino IDE, do NOT include a "normal" loop() funtion!!!
 ```
 
-### Things you can do with a context H4_TASK_PTR
+## Installation
 
-**N.B.** This is an advanced topic for experts only. If you are a beginner, skip to the [Sample Code](/README.md#example-code-arduino-ide) at the end.
+### Arduino IDE
+
+Simply download the zip of this repostory and install as an Arduino library: Sketch/Include Library/Add .ZIP Library...
+
+### STM32CubeIDE
+
+This is a little more involved and has some limitations:
+
+#### Serial Limitations
+
+**H4** includes a heavily-modified port of the Arduino Serial class to enable a "straight lift" of Arduino code that includes `Serial.printX` statments. (these are also used by the diagnostic routine `h4.dumpQ()` which will probably be removed in a later release or at least made `#define`-able).
+
+The port is write-only: printing is supported, but no reading or checking if available() etc. On the plus side, pritning includes support for formatted output (via `printf`) and `std::string`
+
+1. It is hobbled by a cheap-and-cheesy hardcoded reliance on USART3 until I work out a fancy automatic method.
+2. The `begin(baud_rate);` method is a stub which does nothing, the speed used is that set by the HW configuration in CubeMX. It is included to allow "straight lift" but need not be called. /* TODO: fix this! */
+
+#### Timing limitation
+
+**H4** Is predicated upon `HAL_GetTick()` returning milliseconds. Any other timing strategy will break it.
+
+#### Installation steps
+
+1. Generate you project as a C++ project, selecting USART3 (*see above)
+2. Rename main.c to .cpp
+3. Download and unzip this repository
+4. Import H4.cpp, Print.cpp into <project>/Core/Src
+5. Import H4.h, Print.h into <project>/Core/Inc
+6. In main.cpp add the following lines to the relevant "safe" code blocks:
+
+```cpp
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
+#include "H4.h"
+/* USER CODE END Includes */
+
+...
+
+/* USER CODE BEGIN PV */
+H4 h4(25); // define inital Q size: H4 h4; defaults to 20
+/* USER CODE END PV */
+
+...
+
+/* USER CODE BEGIN 2 */
+// put all your H4 setup code here, e.g. :
+// NB the Arduino millis() function is mapped to HAL_GetTick()
+Serial.print("H4 running natively on STM32F429ZI\n");
+h4.every(1000,[]{
+    Serial.print(millis());Serial.println(" PING ");
+});
+/* USER CODE END 2 */
+
+...
+/* Infinite loop */
+/* USER CODE BEGIN WHILE */
+while (1)
+{
+/* USER CODE END WHILE */
+h4.loop();
+/* USER CODE BEGIN 3 */
+}
+/* USER CODE END 3 */
+```
+
+## Advanced Topics
+
+This is an advanced topic for experts only. If you are a beginner, skip to the [Sample Code](/README.md#example-code-arduino-ide) at the end.
+
+### Things you can do with a context H4_TASK_PTR
 
 Experts: All usage should be performed with care and _only_ if you really know what you are doing!
 

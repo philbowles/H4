@@ -1,18 +1,46 @@
-//
+/*
+ MIT License
+
+Copyright (c) 2019 Phil Bowles <H48266@gmail.com>
+   github     https://github.com/philbowles/H4
+   blog       https://8266iot.blogspot.com
+   groups     https://www.facebook.com/groups/esp8266questions/
+              https://www.facebook.com/H4-Esp8266-Firmware-Support-2338535503093896/
+
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
 #ifndef H4_H
 #define H4_H
 
 #define H4_Q_SIZE	20
+#define H4_VERSION  "0.0.1"
+
 #if (defined ARDUINO_ARCH_STM32 || defined ARDUINO_ARCH_ESP8266 || defined ARDUINO_ARCH_ESP32)
-    #pragma message "HARD WEENO"
     #define ARDUINO
 #elif defined __unix__
-    #pragma message "YOU NIXED"
     unsigned long h4GetTick();
     #define millis	h4GetTick
     #include<chrono>
 #else // native stm32
-    #pragma message "NATIVE STM32"
+    #define CUBEIDE
 	#include "main.h"
     #define noInterrupts __disable_irq
     #define interrupts __enable_irq
@@ -21,40 +49,58 @@
 #endif
 
 #if defined ARDUINO
-    #pragma message "ARDUINO TARGET"
-	#include "Arduino.h"
+ 	#include "Arduino.h"
 	#define h4GetTick	millis
 #else
     #include <memory.h>
     #include<stdio.h>
     #include<string.h>
+    #include<unistd.h>
+	#include "Print.h"
+	#include<cstdarg>
+	#include<string>
+	extern "C" {
+		int _write(int file, char *data, int len);
+	}
+	class delegateSerial: public Print{
+		public:
+			delegateSerial(){}
 
-    class delegateSerial {
-        public:
-            delegateSerial(){}
-            void begin(int){}
-            size_t print(const char* c){
-                printf("%s",c);
-                //return strlen(c);
-            }
-            size_t print(int i){
-                printf("%d",i);
-                //return strlen(c);
-            }					
-//				size_t print(uint32_t u){
-//					printf("%u",u);
-//					//return strlen(c);
-//				}				
-            size_t println(const char* c){
-                printf("%s\n",c);
-                //return strlen(c);
-            }
-            size_t println(long int c){
-                printf("%ld\n",c);
-                //return strlen(c);
-            }
-    }; 
-    extern delegateSerial Serial;
+			void begin(uint32_t){}
+
+			size_t write(uint8_t c){
+
+				return _write(1,(char*) &c,1); // 1 is irrlevant
+			}
+
+			size_t write(const char *str)
+			{
+			  if (str == NULL) return 0;
+			  return _write(1,(char*)str, strlen(str)); // 1 is irrelevant
+			}
+
+			size_t write(const uint8_t *buffer, size_t size)
+			{
+			  size_t n = 0;
+			  while (size--) {
+				if (write(*buffer++)) {
+				  n++;
+				} else {
+				  break;
+				}
+			  }
+			  return n;
+			}
+
+			size_t  printf(const char* fmt,...){
+				va_list arg;
+				va_start(arg, fmt);
+				size_t rv=vprintf(fmt, arg);
+				va_end(arg);
+				return rv;
+			}
+	};
+	extern delegateSerial Serial;
 #endif
 
 #include<string>
@@ -202,3 +248,6 @@ public:
 #endif // H4_H
 
 extern H4 h4;
+#ifdef CUBEIDE
+extern UART_HandleTypeDef huart3;
+#endif
