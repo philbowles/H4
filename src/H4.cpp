@@ -63,9 +63,9 @@ SOFTWARE.
 
 void 			__attribute__((weak)) userLoop(){}
 
-H4_TIMER 		H4::context;
-
-H4_TIMER_MAP	task::singles;
+H4_TIMER 		    H4::context=nullptr;
+vector<H4_FN_VOID>  H4::loopChain={};
+H4_TIMER_MAP	    task::singles={};
 
 H4Random::H4Random(uint32_t rmin,uint32_t rmax){ count=task::randomRange(rmin,rmax);	}
 
@@ -234,7 +234,10 @@ size_t task::getPartial(void* d){
 }
 
 #ifdef ARDUINO
-        void loop(){  H4::loop(); }
+        void loop(){ 
+             H4::loop();
+             H4::runHooks();
+         }
 #endif
 
 #define TAG(x) (u+((x)*100))

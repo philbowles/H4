@@ -31,7 +31,7 @@ SOFTWARE.
 #define H4_H
 
 #define H4_Q_SIZE	20
-#define H4_VERSION  "0.0.1"
+#define H4_VERSION  "0.1.0"
 
 #if (defined ARDUINO_ARCH_STM32 || defined ARDUINO_ARCH_ESP8266 || defined ARDUINO_ARCH_ESP32)
     #define ARDUINO
@@ -213,11 +213,13 @@ class pq: public priority_queue<task*, vector<task*>, task> {
 class H4: public pq{
 	friend class task;
             void            matchTasks(function<bool(task*)> p,function<void(task*)> f);
+    static  vector<H4_FN_VOID> loopChain;
 public:
-	static H4_TASK_PTR		context;
-
 	H4(size_t qSize=H4_Q_SIZE){ reserve(qSize); }
 
+	static  H4_TASK_PTR		context;
+    static  void            hookLoop(H4_FN_VOID f){ loopChain.push_back(f); }
+    static  void            runHooks(){ for(auto f:loopChain) f(); }
 	static	void 		    loop();
 
             H4_TASK_PTR 	every(uint32_t msec, H4_FN_VOID fn, H4_FN_VOID fnc = nullptr, uint32_t u = 0,bool s=false);
