@@ -141,7 +141,8 @@ class H4Random: public H4Countdown {
 //
 class task{
 			bool  		    harakiri=false;
-	static	H4_TIMER_MAP    singles;
+//	static	H4_TIMER_MAP    singles;
+	    	H4_TIMER_MAP    singles;
 
 		    void            _chain();
 		    void            _destruct();
@@ -176,7 +177,8 @@ class task{
 			bool 			_s=false
 			);
 
-		static 	void 		cancelSingleton(uint32_t);
+//		static 	void 		cancelSingleton(uint32_t);
+		     	void 		cancelSingleton(uint32_t);
 				uint32_t 	cleardown(uint32_t t);
 //		The many ways to die... :)
 				uint32_t 	endF(); // finalise: finishEarly
@@ -188,7 +190,7 @@ class task{
 				void 		requeue();
 				void 		schedule();
 				void		storePartial(void* d,size_t l);
-		static 	uint32_t	randomRange(uint32_t lo,uint32_t hi);
+		static 	uint32_t	randomRange(uint32_t lo,uint32_t hi); // move to h4
 };
 //
 //		P R I O R I T Y   Q U E U E (has to be after task)
@@ -212,14 +214,24 @@ class pq: public priority_queue<task*, vector<task*>, task> {
 
 class H4: public pq{
 	friend class task;
+//
+//   DIAG
+// 
+	friend class H4FlasherController;
+	friend class H4GPIOManager;
+            void                        _addTrustedName(uint32_t id,const char* name);
+            std::map<uint32_t,string>   trustedNames={};
+//   
             void            matchTasks(function<bool(task*)> p,function<void(task*)> f);
-    static  vector<H4_FN_VOID> loopChain;
+
+            vector<H4_FN_VOID> loopChain;
+
 public:
 	H4(size_t qSize=H4_Q_SIZE){ reserve(qSize); }
-
+            void            hookLoop(H4_FN_VOID f){ loopChain.push_back(f); }
+            void            runHooks(){ for(auto f:loopChain) f(); }
+            
 	static  H4_TASK_PTR		context;
-    static  void            hookLoop(H4_FN_VOID f){ loopChain.push_back(f); }
-    static  void            runHooks(){ for(auto f:loopChain) f(); }
 	static	void 		    loop();
 
             H4_TASK_PTR 	every(uint32_t msec, H4_FN_VOID fn, H4_FN_VOID fnc = nullptr, uint32_t u = 0,bool s=false);

@@ -41,11 +41,11 @@ const char* getTaskName(uint32_t n){
   static std::map<uint32_t,string> mydata={
     {1,"Tick"},
     {4,"Rude"},
-    {13,"Link"},
-    {66,"1Tim"},
-    {99,"10GB"}
+    {13,"Link"}, // don't have to be in order (but why not?)
+    {6,"1Tim"}, // don't have to be used (but why not?)
+    {49,"10GB"} // Keep them below 50 - IDs 50-99 are used by the system
     };
-  return mydata.count(n) ? mydata[n].c_str():"NONE";
+  return mydata.count(n) ? mydata[n].c_str():"ANON";
 }
 // if you don't want task naming, just delete the above
 
