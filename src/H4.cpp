@@ -26,7 +26,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-#include "H4.h"
+#include <H4.h>
+#include <H4Utils.h>
 
 #ifndef ARDUINO
 	delegateSerial Serial;
@@ -60,8 +61,19 @@ SOFTWARE.
 	void noInterrupts(){
 	}
 #endif
-
-void        __attribute__((weak)) userLoop(){}
+//
+//      and ...here we go!
+//
+/*
+H4_CMD_MAP H4::_cmds = {
+	{"cmd", {1, nullptr}},
+	{"1show", {2,nullptr}},
+	{"2Qstats", {0, [](vector<string> vs){ Serial.print("Q capacity:");Serial.println(_capacity()); }}},
+	{"2Q", {0, [](vector<string> vs){ dumpQ(); }}}
+};
+*/
+//
+void        __attribute__((weak)) h4UserLoop(){}
 
 H4_TIMER 		    H4::context=nullptr;
 
@@ -69,16 +81,17 @@ H4Random::H4Random(uint32_t rmin,uint32_t rmax){ count=task::randomRange(rmin,rm
 
 task* pq::add(H4_FN_VOID _f,uint32_t _m,uint32_t _x,H4_FN_COUNT _r,H4_FN_VOID _c,uint32_t _u,bool _s){
 	task* t=new task(_f,_m,_x,_r,_c,_u,_s);
+    taskEvent(t,'C');
 	qt(t);
 	return t;
 }
-
+/*
 void pq::clear(){
 	noInterrupts();
 	for(auto const& qi:c) qi->endK();
 	interrupts();
 }
-
+*/
 uint32_t pq::gpFramed(task* t,function<uint32_t()> f){
 	uint32_t rv=0;
 	if(t){
@@ -114,6 +127,7 @@ void pq::qt(task* t){
 	noInterrupts();
 	push(t);
 	interrupts();
+    taskEvent(t,'S');
 }
 
 vector<task*> pq::select(function<bool(task*)> p){
@@ -184,6 +198,7 @@ uint32_t task::cleardown(uint32_t pass){
 }
 
 void task::_destruct(){
+    h4.taskEvent(this,'D');
 	if(partial) free(partial);
     delete this;
 }
@@ -230,7 +245,9 @@ size_t task::getPartial(void* d){
 	memcpy(d,partial,len);
 	return len;
 }
-
+//
+//      H4
+//
 #ifdef ARDUINO
         void loop(){ 
              h4.loop();
@@ -274,10 +291,10 @@ extern "C" {
 	void H4::loop(){
 		if(context=h4.next()){
 			(*context)();
-			context=nullptr;
+ 			context=nullptr;
 		}
-        h4.runHooks();
-		userLoop();
+        for(auto f:loopChain) f();
+		h4UserLoop();
 	}
 #ifndef __cplusplus
 }
@@ -285,7 +302,7 @@ extern "C" {
 //
 //  DIAGNOSTIC
 //
-void H4::matchTasks(function<bool(task*)> p,function<void(task*)> f){
+void H4::_matchTasks(function<bool(task*)> p,function<void(task*)> f){
     vector<task*> vesta=select(p);
     sort(vesta.begin(),vesta.end(),[](const task* a, const task* b){ return a->at < b->at; });
     for(auto const& m:vesta) if(has(m)) f(m);
@@ -293,7 +310,7 @@ void H4::matchTasks(function<bool(task*)> p,function<void(task*)> f){
 
 const char* __attribute__((weak)) getTaskName(uint32_t n){ return "ANON"; }
 
-std::map<uint32_t,string> tasktypes={
+H4_INT_MAP tasktypes={
     {3,"evry"}, // 3
     {4,"evrn"}, // 4
     {5,"ntim"}, // 5
@@ -306,41 +323,32 @@ std::map<uint32_t,string> tasktypes={
     {12,"rptw"}, // 12
     {13,"rpwe"}  // 13
 };
-void H4::_addTrustedName(uint32_t id, const char* name){ 
-    /*
-    Serial.print("Trusted Name ID ");
-    Serial.print(id);
-    Serial.print(":");
-    Serial.println(name);
-    */
-    trustedNames[id]=name;
+
+void H4::_dumpTask(task* t){
+    char buf[256];
+    uint32_t type=t->uid/100;
+    uint32_t id=t->uid%100;
+    string utn(getTaskName(id));
+    if(utn=="ANON") if(trustedNames.count(id)) utn=trustedNames[id];      
+    sprintf(buf,"%09lu 0x%08lx %04d %s (%s/%s) %9d %9d %9d\n",
+        t->at,
+        (unsigned long) t,
+        t->uid,
+        t->singleton ? "S":" ",
+        tasktypes.count(type) ? CSTR(tasktypes[type]):"NDEF",
+        CSTR(utn),
+        t->rmin,
+        t->rmax,
+        t->nrq);
+    Serial.print(buf);
 }
+using namespace std::placeholders;
 
 void H4::dumpQ(){
-    function<void(task*)> dumpLine=[this](task* t){
-        char buf[256];
-        uint32_t type=t->uid/100;
-        uint32_t id=t->uid%100;
-        string utn(getTaskName(id));
-        if(utn=="ANON") if(trustedNames.count(id)) utn=trustedNames[id];      
-        sprintf(buf,"%09lu 0x%08lx %04d %s (%s/%s) %9d %9d %9d\n",
-            t->at,
-            (unsigned long) t,
-            t->uid,
-            t->singleton ? "S":" ",
-            tasktypes.count(type) ? CSTR(tasktypes[type]):"NDEF",
-            CSTR(utn),
-            t->rmin,
-            t->rmax,
-            t->nrq);
-        Serial.print(buf);
-    };
- //   for(auto const& n:trustedNames) { Serial.print(n.first);Serial.print(":");Serial.println(CSTR(n.second)); }
 	Serial.print("Due @tick UID        Type                     Min       Max       nRQ\n");  
-    if(context) dumpLine(context);     
-	matchTasks(
+    if(context) _dumpTask(context);     
+	_matchTasks(
 		[](task* t){ return true; },
-        dumpLine
+        bind(&H4::_dumpTask,this,_1)
 	);     
 }
-

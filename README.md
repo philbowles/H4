@@ -228,7 +228,7 @@ H4 h4;
  Optional: allows you to "tag" your own task so that you can see them in the Queue dump
  */
 const char* getTaskName(uint32_t n){
-  static std::map<uint32_t,string> mydata={
+  static H4_INT_MAP<uint32_t,string> mydata={
     {1,"Tick"},
     {4,"Rude"},
     {13,"Link"},

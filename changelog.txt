@@ -1,4 +1,4 @@
 2019/12/02  0.1.0   added static functions hookLoop / runHooks for fwd compatibilty with
-                    H4GPIOManager
+                    H4P_GPIOManager
 
                     added this file
