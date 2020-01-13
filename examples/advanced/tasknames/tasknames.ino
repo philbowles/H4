@@ -1,34 +1,5 @@
-/*
- MIT License
-
-Copyright (c) 2019 Phil Bowles <H48266@gmail.com>
-   github     https://github.com/philbowles/H4
-   blog       https://8266iot.blogspot.com
-   groups     https://www.facebook.com/groups/esp8266questions/
-              https://www.facebook.com/H4-Esp8266-Firmware-Support-2338535503093896/
-
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
 #include <H4.h>
-H4 h4; // default to 20 tasks
-
+H4 h4(115200); // setes Serial to 115200, default to 20 tasks
 /*
 
 Optional: Allows you to "tag" your tasks with a name* so that you can find them
@@ -37,7 +8,7 @@ Optional: Allows you to "tag" your tasks with a name* so that you can find them
     *keep it to 4 chs or the columns won't line up
 
 */
-const char* getTaskName(uint32_t n){
+const char* giveTaskName(uint32_t n){
   static H4_INT_MAP<uint32_t,string> mydata={
     {1,"Tick"},
     {4,"Rude"},
@@ -49,7 +20,7 @@ const char* getTaskName(uint32_t n){
 }
 // if you don't want task naming, just delete the above
 
-void setup() {
+void h4setup() {
   Serial.begin(115200);
     h4.everyRandom(5000,10000,[](){ 
     Serial.print(millis());Serial.println(" RUDE INTERRUPTION");

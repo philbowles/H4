@@ -30,15 +30,26 @@ SOFTWARE.
 #ifndef H4_H
 #define H4_H
 
-#define H4_Q_SIZE	20
-#define H4_VERSION  "0.1.0"
+#define H4_VERSION  "0.2.0"
+
+#define H4_Q_CAPACITY	20
+#define H4_Q_ABS_MIN     3
 
 #if (defined ARDUINO_ARCH_STM32 || defined ARDUINO_ARCH_ESP8266 || defined ARDUINO_ARCH_ESP32)
-    #define ARDUINO
+    #define H4_ARDUINO
+    #if(defined ARDUINO_ARCH_STM32)
+        #define h4reboot NVIC_SystemReset
+        #define H4_BOARD BOARD_NAME
+    #else
+        #define h4reboot ESP.restart
+        #define H4WF_WIFI
+        #define H4_BOARD ARDUINO_BOARD
+    #endif
 #elif defined __unix__
     unsigned long h4GetTick();
     #define millis	h4GetTick
     #include<chrono>
+    #define h4reboot (*(void*) 0)()
 #else // native stm32
     #define CUBEIDE
 	#include "main.h"
@@ -46,10 +57,11 @@ SOFTWARE.
     #define interrupts __enable_irq
     #define h4GetTick	HAL_GetTick
 	#define millis		HAL_GetTick
+    #define h4reboot NVIC_SystemReset
 #endif
 
-#if defined ARDUINO
- 	#include "Arduino.h"
+#if defined H4_ARDUINO
+ 	#include <Arduino.h>
 	#define h4GetTick	millis
 #else
     #include <memory.h>
@@ -113,21 +125,26 @@ SOFTWARE.
 using namespace std;
 
 class   task;
-
 using	H4_TASK_PTR		=task*;
 using	H4_TIMER		=H4_TASK_PTR;
 
 using	H4_FN_COUNT		=function<uint32_t(void)>;
-using 	H4_FN_MSG 		=function<void(vector<string>)>;
 using	H4_FN_TASK		=function<void(H4_TASK_PTR,char)>;
 using	H4_FN_TIF		=function<bool(H4_TASK_PTR)>;
 using	H4_FN_VOID		=function<void(void)>;
+using   H4_FN_RTPTR     = H4_FN_COUNT;
 //
 using   H4_INT_MAP      =std::unordered_map<uint32_t,string>;
 using 	H4_TIMER_MAP	=std::unordered_map<uint32_t,H4_TIMER>;
-
 //
 #define CSTR(x) x.c_str()
+#define ME H4::context
+#define MY(x) H4::context->x
+//
+//  diag
+//
+#define dumpvs(s) for(auto const& v:s) Serial.printf("VS:%s\n",CSTR(v))
+#define dumpvi(i) for(auto const& v:i) Serial.printf("VI:%u\n",v)
 
 class H4Countdown {
 	public:
@@ -145,7 +162,7 @@ class H4Random: public H4Countdown {
 //
 class task{
 			bool  		    harakiri=false;
-	    	H4_TIMER_MAP    singles;
+	static	H4_TIMER_MAP    singles;
 
 		    void            _chain();
 		    void            _destruct();
@@ -180,7 +197,7 @@ class task{
 			bool 			_s=false
 			);
 
-		     	void 		cancelSingleton(uint32_t);
+		static	void 		cancelSingleton(uint32_t id);
 				uint32_t 	cleardown(uint32_t t);
 //		The many ways to die... :)
 				uint32_t 	endF(); // finalise: finishEarly
@@ -213,22 +230,38 @@ class pq: public priority_queue<task*, vector<task*>, task> {
             vector<task*> 	select(function<bool(task*)> p);
 
             H4_FN_TASK      taskEvent=[](task*,char){};
-
 };
+//
+//      H 4
+//
 class H4: public pq{
 	friend class task;
-                H4_INT_MAP      trustedNames={};
                 vector<H4_FN_VOID> loopChain;
-
-                void            _matchTasks(function<bool(task*)> p,function<void(task*)> f);
+                vector<H4_FN_VOID> pendingChain;
 
     public:
 
-            
+//        static    void  postMsg(string s);
+    
+        static  H4_INT_MAP      trustedNames;
+        static  std::unordered_map<string,int> unloadables;
 	    static  H4_TASK_PTR		context;
+	            H4_FN_VOID		startup;
+
 	    	    void 		    loop();
-	
-                H4(size_t qSize=H4_Q_SIZE){ reserve(qSize); }
+                void            setup();
+
+                H4(uint32_t baud=0,size_t qSize=H4_Q_CAPACITY){ 
+                    reserve(qSize);
+                    startup=bind([this](uint32_t baud){
+                        if(baud) {
+                            Serial.begin(baud);
+                            Serial.print(" H4 version ");Serial.println(H4_VERSION);
+                        }
+                        for(auto const& p:pendingChain) p();
+                        pendingChain.clear();
+                    },baud);
+                }
 
                 H4_TASK_PTR 	every(uint32_t msec, H4_FN_VOID fn, H4_FN_VOID fnc = nullptr, uint32_t u = 0,bool s=false);
                 H4_TASK_PTR 	everyRandom(uint32_t Rmin, uint32_t Rmax, H4_FN_VOID fn, H4_FN_VOID fnc = nullptr, uint32_t u = 0,bool s=false);
@@ -244,29 +277,63 @@ class H4: public pq{
 
                 H4_TASK_PTR		cancel(H4_TASK_PTR t = context) { return endK(t); } // ? rv ?
                 void 			cancelAll(H4_FN_VOID fn = nullptr);
-                void 			cancelSingleton(uint32_t s);
+                void 			cancelSingleton(uint32_t s){ task::cancelSingleton(s); }
                 void			cancelSingleton(initializer_list<uint32_t> l){ for(auto i:l) cancelSingleton(i); }
                 uint32_t 		finishEarly(H4_TASK_PTR t = context) { return endF(t); }
                 uint32_t 		finishNow(H4_TASK_PTR t = context) { return endU(t); }
                 bool			finishIf(H4_TASK_PTR t, H4_FN_TIF f) { return endC(t, f); }
 //
 //     EXPERT / DIAGNOSTIC
-//
+//                
                 void            dumpQ();
-                void            addTrustedNames(H4_INT_MAP& names){ for(auto const& n:names) if(n.first < 50) trustedNames[n.first]=n.second; }
 //       
                 size_t          _capacity(){ return c.capacity(); } 
                 void            _dumpTask(task*);
                 bool            _hasName(uint32_t n){ return trustedNames.count(n); }     
                 void            _hookEvent(H4_FN_TASK f){ taskEvent=f; }     
-                void            _hookLoop(H4_FN_VOID f,H4_INT_MAP& names){
-                    loopChain.push_back(f);
-                    trustedNames.insert(names.begin(),names.end());
-                    names.clear();
-                }  
-                void            _showTnames(){ for(auto const& n:trustedNames) { Serial.print("TNAME: ");Serial.print(n.first);Serial.print(":");Serial.println(CSTR(n.second)); }}
+                void            _queuePlugin(H4_FN_VOID f){ pendingChain.push_back(f); }
+                void            _hookLoop(H4_FN_VOID f,H4_INT_MAP names,string pid);
+                void            _matchTasks(function<bool(task*)> p,function<void(task*)> f);
+                void            _unHook(uint32_t token){ if(!(token < 0)) loopChain.erase(loopChain.begin()+token); }
+                size_t          _size(){ return size(); }
+};
 
-                size_t          _size(){ return size(); } 
+#define ME H4::context
+#define MY(x) ((ME)->x)
+//
+//  pr = partial results: a struct (or simple int) that is persisted across task schedules
+//
+template<typename T>
+class pr{
+        size_t   size=sizeof(T);
+
+        template<typename T2>
+        T2  put(T2 v){ 
+            memcpy(MY(partial),reinterpret_cast<void*>(&v),size);
+            return get<T2>();
+            }
+        template<typename T2>
+        T2  get(){ return (*(reinterpret_cast<T2*>(MY(partial)))); }
+
+    public:
+        pr(T v){
+            if(!MY(partial)){ 
+                MY(partial)=reinterpret_cast<T*>(malloc(size));
+                put<T>(v);
+            }
+        }
+
+        pr operator=( const T other ) { return put(other);  }
+
+        operator T() { return get<T>(); }
+
+        T operator +(T v) { return get<T>()+v; }
+
+        T operator +=(T v) { return put<T>(get<T>()+v); }
+
+        T* operator->() const {
+        return reinterpret_cast<T*>(MY(partial));
+      }
 };
 
 #ifdef CUBEIDE
@@ -274,5 +341,25 @@ extern UART_HandleTypeDef huart3;
 #endif
 
 extern H4 h4;
+
+#define H4_JITTER_LO    100
+#define H4_JITTER_HI    350
+
+template<typename T>
+static void chunker(T const& x,function<void(typename T::const_iterator)> fn){
+    static size_t tLen=sizeof(typename T::const_iterator);
+    H4_TIMER p=h4.repeatWhile(
+        H4Countdown(x.size()),
+        random(H4_JITTER_LO,H4_JITTER_HI), // arbitrary
+        bind([](function<void(typename T::const_iterator)> fn){ 
+            typename T::const_iterator thunk;
+            ME->getPartial(&thunk);
+            fn(thunk++);
+            ME->storePartial((void*) &thunk,tLen);
+            },fn),
+        nullptr,99);
+    typename T::const_iterator chunkIt=x.begin();
+    p->storePartial((void*) &chunkIt,tLen);
+}
 
 #endif // H4_H

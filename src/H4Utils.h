@@ -30,13 +30,20 @@ SOFTWARE.
 #ifndef H4Utils_H
 #define H4Utils_H
 
+#include<Arduino.h>
 #include<vector>
 #include<string>
 
 using namespace std;
 
-string 		join(const vector<string>& vs,const char* delim="\n");
-vector<string> split(const string& s, const char* delimiter="\n");
+bool		    isNumeric(const string& s);
+string 		    join(const vector<string>& vs,const char* delim="\n");
+vector<string>  split(const string& s, const char* delimiter="\n");
+string		    stringFromInt(int i,const char* fmt="%d");
+string          stringFromBuff(const byte* data,int len);
+string          uppercase(string);
+string          rtrim(const string& s, const char d=' ');
+string          ltrim(const string& s, const char d=' ');
+string          trim(const string& s, const char d=' ');
 
 #endif
-

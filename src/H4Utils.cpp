@@ -29,6 +29,8 @@ SOFTWARE.
 #include <H4Utils.h>
 
 // non-member utils:
+bool isNumeric(const string& s){ return all_of(s.begin(), s.end(), ::isdigit); }
+
 string join(const vector<string>& vs,const char* delim) {
 	string rv="";
 	if(vs.size()){
@@ -54,3 +56,38 @@ vector<string> split(const string& s, const char* delimiter){
 	if(tec.size()) vt.push_back(tec);		
 	return vt;
 }
+
+string stringFromBuff(const byte* data,int len){
+	byte* p = (byte*)malloc(len+1);
+	memcpy(p,data,len);
+	p[len]='\0';
+	string rv(reinterpret_cast<char*>(p));
+	free(p);
+	return rv;	
+}
+
+string stringFromInt(int i,const char* fmt){
+	char buf[32];
+	sprintf(buf,fmt,i);
+	return string(buf);
+}
+
+string uppercase(string s){
+   string ucase(s);
+   transform(ucase.begin(), ucase.end(),ucase.begin(), [](unsigned char c){ return std::toupper(c); } );
+   return ucase;
+}
+
+string rtrim(const string& s, const char d){
+	string rv(s);
+	while(rv.size() && (rv.back()==d)) rv.pop_back();
+	return rv;	
+}
+string ltrim(const string& s, const char d){
+	string rv(s);
+	while(rv.size() && (rv.front()==d)) rv=string(++rv.begin(),rv.end());
+	return rv;	
+}
+string trim(const string& s, const char d){ return(ltrim(rtrim(s,d),d)); }
+
+

@@ -64,18 +64,17 @@ SOFTWARE.
 //
 //      and ...here we go!
 //
-/*
-H4_CMD_MAP H4::_cmds = {
-	{"cmd", {1, nullptr}},
-	{"1show", {2,nullptr}},
-	{"2Qstats", {0, [](vector<string> vs){ Serial.print("Q capacity:");Serial.println(_capacity()); }}},
-	{"2Q", {0, [](vector<string> vs){ dumpQ(); }}}
-};
-*/
-//
 void        __attribute__((weak)) h4UserLoop(){}
 
+#define H4CH_TRID_CHNK 99
+H4_INT_MAP	        H4::trustedNames={
+    {H4CH_TRID_CHNK,"CHNK"}
+};
+
 H4_TIMER 		    H4::context=nullptr;
+std::unordered_map<string,int> H4::unloadables;
+
+H4_TIMER_MAP	    task::singles={};
 
 H4Random::H4Random(uint32_t rmin,uint32_t rmax){ count=task::randomRange(rmin,rmax);	}
 
@@ -92,7 +91,7 @@ void pq::clear(){
 	interrupts();
 }
 */
-uint32_t pq::gpFramed(task* t,function<uint32_t()> f){
+uint32_t pq::gpFramed(task* t,H4_FN_RTPTR f){
 	uint32_t rv=0;
 	if(t){
 		noInterrupts();
@@ -157,9 +156,9 @@ task::task(
   uid{_u},
   singleton{_s}
 {
-	if(_s){
+    if(_s){
 		uint32_t id=_u%100;
-		if(singles.count(id)) singles[id]->endK();
+		if(singles.count(id)) singles[id]->endK();    
 		singles[id]=this;
 	}
 	schedule();
@@ -187,7 +186,7 @@ void task::operator()(){
 
 void task::_chain(){ if(chain) h4.add(chain,0,0,H4Countdown(1),nullptr,uid); } // prevents tag rescaling during the pass
 
-void task::cancelSingleton(uint32_t s){ if(task::singles.count(s)) task::singles[s]->endK(); }
+void task::cancelSingleton(uint32_t s){ if(singles.count(s)) singles[s]->endK(); }
 
 uint32_t task::cleardown(uint32_t pass){
 	if(singleton){
@@ -248,10 +247,23 @@ size_t task::getPartial(void* d){
 //
 //      H4
 //
+extern  void h4setup();
+
+void H4::_hookLoop(H4_FN_VOID f,H4_INT_MAP names,string pid){
+    if(f) {
+        unloadables[pid]=loopChain.size();
+        loopChain.push_back(f);
+    }
+    trustedNames.insert(names.begin(),names.end());
+}  
 #ifdef ARDUINO
-        void loop(){ 
-             h4.loop();
-         }
+        void setup(){
+                h4.startup();
+                h4setup();
+        }        
+        
+        void loop(){ h4.loop(); }
+
 #endif
 
 #define TAG(x) (u+((x)*100))
@@ -290,11 +302,13 @@ extern "C" {
 #endif
 	void H4::loop(){
 		if(context=h4.next()){
-			(*context)();
+            (*context)();
  			context=nullptr;
 		}
         for(auto f:loopChain) f();
+#ifndef H4_NO_USERLOOP
 		h4UserLoop();
+#endif
 	}
 #ifndef __cplusplus
 }
@@ -308,8 +322,7 @@ void H4::_matchTasks(function<bool(task*)> p,function<void(task*)> f){
     for(auto const& m:vesta) if(has(m)) f(m);
 }
 
-const char* __attribute__((weak)) getTaskName(uint32_t n){ return "ANON"; }
-
+    
 H4_INT_MAP tasktypes={
     {3,"evry"}, // 3
     {4,"evrn"}, // 4
@@ -324,24 +337,25 @@ H4_INT_MAP tasktypes={
     {13,"rpwe"}  // 13
 };
 
+const char* __attribute__((weak)) giveTaskName(uint32_t id){ return "ANON"; }
+
 void H4::_dumpTask(task* t){
     char buf[256];
     uint32_t type=t->uid/100;
     uint32_t id=t->uid%100;
-    string utn(getTaskName(id));
-    if(utn=="ANON") if(trustedNames.count(id)) utn=trustedNames[id];      
     sprintf(buf,"%09lu 0x%08lx %04d %s (%s/%s) %9d %9d %9d\n",
         t->at,
         (unsigned long) t,
         t->uid,
         t->singleton ? "S":" ",
         tasktypes.count(type) ? CSTR(tasktypes[type]):"NDEF",
-        CSTR(utn),
+        (trustedNames.count(id) ? CSTR(trustedNames[id]):giveTaskName(id)),
         t->rmin,
         t->rmax,
         t->nrq);
     Serial.print(buf);
 }
+
 using namespace std::placeholders;
 
 void H4::dumpQ(){
@@ -352,3 +366,11 @@ void H4::dumpQ(){
         bind(&H4::_dumpTask,this,_1)
 	);     
 }
+/*
+void  H4::postMsg(string s){
+    long startTime=micros();
+    h4.queueFunction(bind([](string s,long startTime){ 
+        Serial.print(CSTR(s));Serial.print(" ran @ ");Serial.println(startTime);
+    },s,startTime));    
+}
+*/
