@@ -5,6 +5,7 @@
 ![H4 Flyer](/assets/H4flyer.jpg)
 
 ---
+
 ## Important note for platformIO users
 
 For a long time now, platformIO has not been 100% Arduino compatible. Despite people like me raising issues, they still haven't fixed the (very simple) problem. So before you can use it, you will have to get their support to fix it. Here's what to tell them:

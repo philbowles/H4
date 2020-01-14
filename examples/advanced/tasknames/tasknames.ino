@@ -9,7 +9,7 @@ Optional: Allows you to "tag" your tasks with a name* so that you can find them
 
 */
 const char* giveTaskName(uint32_t n){
-  static H4_INT_MAP<uint32_t,string> mydata={
+  static H4_INT_MAP mydata={
     {1,"Tick"},
     {4,"Rude"},
     {13,"Link"}, // don't have to be in order (but why not?)

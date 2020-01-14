@@ -16,18 +16,17 @@ void bareFunction(){ simpleSimon.says("Bare your soul"); }
 
 void h4setup() {
 
-  h4.queueFunction(bind(&simpleSimon::says,simple,"This will run ONCE"));       // will run once with no delay as soon as you exit setup
+  h4.queueFunction(bind(&simple::says,simpleSimon,"This will run ONCE"));       // will run once with no delay as soon as you exit setup
   
   // USING BARE FUNCTION
   h4.nTimes(5,3000,bareFunction);
 
   // USING STD::BIND
   h4.everyRandom(10000,30000,
-    bind(&simpleSimon::says,simpleSimon,"It CAN be done often too!")                 // and (rather annoyingly) again every 10 - 30 seconds
+    bind(&simple::says,simpleSimon,"It CAN be done often too!")                 // and (rather annoyingly) again every 10 - 30 seconds
     );
   // USING LAMBDA     
   h4.randomTimesRandom(5,10,5000,15000,
     [](){ simpleSimon.says("It's never a bind!"); }  
     );
-    
 }
