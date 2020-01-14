@@ -157,7 +157,7 @@ Voila: Three different LEDs, all runing at different speeds at the same time Now
 
 ### Introduction
 
-All timers return a "handle" (type `H4_TIMER`*) which can be used to subsequently cancel the task. It can be ignored if not required.
+All timers return a "handle" (type `H4_TIMER` - see footnote*) which can be used to subsequently cancel the task. It can be ignored if not required.
 
 With one exception (`queueFunction`) all tasks start _after_ the first specified time interval and not immediately. Using the infinite task "`every(1000...`" will invoke the first instance of user callback at Tstart + 1sec (1000 mS).
 
@@ -171,7 +171,7 @@ Tasks which only "make sense" if they are unique (e.g. a system "ticker") can de
 
 It is important to understand that *no* task will actually start running until you exit `h4setup`, only then does H4 takes over the loop and start processing whatever it finds in the queue.
 
-*( * or `H4_TASK_PTR` - they are identical)*
+*( * footnote: or `H4_TASK_PTR` - they are identical)*
 
 ---
 
