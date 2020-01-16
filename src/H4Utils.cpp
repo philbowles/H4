@@ -41,6 +41,17 @@ string join(const vector<string>& vs,const char* delim) {
 	return rv;
 }
 
+string replaceAll(const string& s,const string& f,const string& r){
+  string tmp=s;
+  size_t pos = tmp.find(f);
+
+  while( pos != string::npos){
+    tmp.replace(pos, f.size(), r);
+    pos =tmp.find(f, pos + r.size());
+  }
+return tmp;
+}
+
 vector<string> split(const string& s, const char* delimiter){
 	vector<string> vt;
 	string delim(delimiter);
@@ -89,5 +100,3 @@ string ltrim(const string& s, const char d){
 	return rv;	
 }
 string trim(const string& s, const char d){ return(ltrim(rtrim(s,d),d)); }
-
-

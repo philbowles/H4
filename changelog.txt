@@ -1,3 +1,5 @@
+2020/01/16  0.2.1   added replaceAll to utils
+
 2019/12/02  0.1.0   added static functions hookLoop / runHooks for fwd compatibilty with
                     H4P_GPIOManager
 

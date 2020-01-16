@@ -44,6 +44,18 @@ randomTimes	KEYWORD2
 randomTimesRandom	KEYWORD2
 repeatWhile	KEYWORD2
 repeatWhileEver	KEYWORD2
+
+isNumeric	KEYWORD2
+join	KEYWORD2
+replaceAll	KEYWORD2
+split	KEYWORD2
+stringFromInt	KEYWORD2
+stringFromBuff	KEYWORD2
+uppercase	KEYWORD2
+rtrim	KEYWORD2
+ltrim	KEYWORD2
+trim	KEYWORD2
+
 #######################################
 # Constants (LITERAL1)
 #######################################
