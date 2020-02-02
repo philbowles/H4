@@ -55,21 +55,21 @@ SOFTWARE.
 		return ms;
 	}
 	
-	void interrupts(){
-	}
+	void interrupts(){}
 
-	void noInterrupts(){
-	}
+	void noInterrupts(){}
 #endif
 //
 //      and ...here we go!
 //
-void        __attribute__((weak)) h4UserLoop(){}
+void __attribute__((weak)) h4UserLoop(){}
+void __attribute__((weak)) startPlugins(){}
+void __attribute__((weak)) h4setup(){}
+
+void            h4reboot(){ h4.once(500,[](){ h4rebootCore(); }); }    
 
 #define H4CH_TRID_CHNK 99
-H4_INT_MAP	        H4::trustedNames={
-    {H4CH_TRID_CHNK,"CHNK"}
-};
+H4_INT_MAP	        H4::trustedNames={ {H4CH_TRID_CHNK,"CHNK"} };
 
 H4_TIMER 		    H4::context=nullptr;
 std::unordered_map<string,int> H4::unloadables;
@@ -234,15 +234,10 @@ void task::requeue(){
 
 void task::schedule(){ at=h4GetTick() + randomRange(rmin,rmax); }
 
-void task::storePartial(void* d,size_t l){
+void task::createPartial(void* d,size_t l){
 	partial=malloc(l);
 	memcpy(partial,d,l);
-	len=l;
-}
-
-size_t task::getPartial(void* d){
-	memcpy(d,partial,len);
-	return len;
+        len = l;
 }
 //
 //      H4
@@ -359,6 +354,7 @@ void H4::_dumpTask(task* t){
 using namespace std::placeholders;
 
 void H4::dumpQ(){
+//	Serial.printf("Free heap=%u Qs=%d\n",ESP.getFreeHeap(),size());
 	Serial.print("Due @tick UID        Type                     Min       Max       nRQ\n");  
     if(context) _dumpTask(context);     
 	_matchTasks(

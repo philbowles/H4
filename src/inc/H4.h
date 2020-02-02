@@ -30,7 +30,7 @@ SOFTWARE.
 #ifndef H4_H
 #define H4_H
 
-#define H4_VERSION  "0.2.0"
+#define H4_VERSION  "0.3.0"
 
 #define H4_Q_CAPACITY	20
 #define H4_Q_ABS_MIN     3
@@ -38,10 +38,10 @@ SOFTWARE.
 #if (defined ARDUINO_ARCH_STM32 || defined ARDUINO_ARCH_ESP8266 || defined ARDUINO_ARCH_ESP32)
     #define H4_ARDUINO
     #if(defined ARDUINO_ARCH_STM32)
-        #define h4reboot NVIC_SystemReset
+        #define h4rebootCore NVIC_SystemReset
         #define H4_BOARD BOARD_NAME
     #else
-        #define h4reboot ESP.restart
+        #define h4rebootCore ESP.restart
         #define H4WF_WIFI
         #define H4_BOARD ARDUINO_BOARD
     #endif
@@ -49,7 +49,7 @@ SOFTWARE.
     unsigned long h4GetTick();
     #define millis	h4GetTick
     #include<chrono>
-    #define h4reboot (*(void*) 0)()
+    #define h4rebootCore (*(void*) 0)()
 #else // native stm32
     #define CUBEIDE
 	#include "main.h"
@@ -57,7 +57,7 @@ SOFTWARE.
     #define interrupts __enable_irq
     #define h4GetTick	HAL_GetTick
 	#define millis		HAL_GetTick
-    #define h4reboot NVIC_SystemReset
+    #define h4rebootCore NVIC_SystemReset
 #endif
 
 #if defined H4_ARDUINO
@@ -114,6 +114,8 @@ SOFTWARE.
 	};
 	extern delegateSerial Serial;
 #endif
+
+void h4reboot();
 
 #include<string>
 #include<vector>
@@ -205,10 +207,11 @@ class task{
 				uint32_t	endC(H4_FN_TIF); // conditional
 				uint32_t	endK(); // kill, chop etc
 //
-				size_t 		getPartial(void* d);
-				void 		requeue();
+				void		createPartial(void* d,size_t l);
+				void 		getPartial(void* d){ memcpy(d, partial, len); }
+                void        putPartial(void *d){ memcpy(partial, d, len); }
+                void 		requeue();
 				void 		schedule();
-				void		storePartial(void* d,size_t l);
 		static 	uint32_t	randomRange(uint32_t lo,uint32_t hi); // move to h4
 };
 //
@@ -234,15 +237,13 @@ class pq: public priority_queue<task*, vector<task*>, task> {
 //
 //      H 4
 //
+extern void startPlugins();
+
 class H4: public pq{
 	friend class task;
                 vector<H4_FN_VOID> loopChain;
-                vector<H4_FN_VOID> pendingChain;
 
-    public:
-
-//        static    void  postMsg(string s);
-    
+    public:    
         static  H4_INT_MAP      trustedNames;
         static  std::unordered_map<string,int> unloadables;
 	    static  H4_TASK_PTR		context;
@@ -258,8 +259,7 @@ class H4: public pq{
                             Serial.begin(baud);
                             Serial.print(" H4 version ");Serial.println(H4_VERSION);
                         }
-                        for(auto const& p:pendingChain) p();
-                        pendingChain.clear();
+                        startPlugins();
                     },baud);
                 }
 
@@ -291,7 +291,6 @@ class H4: public pq{
                 void            _dumpTask(task*);
                 bool            _hasName(uint32_t n){ return trustedNames.count(n); }     
                 void            _hookEvent(H4_FN_TASK f){ taskEvent=f; }     
-                void            _queuePlugin(H4_FN_VOID f){ pendingChain.push_back(f); }
                 void            _hookLoop(H4_FN_VOID f,H4_INT_MAP names,string pid);
                 void            _matchTasks(function<bool(task*)> p,function<void(task*)> f);
                 void            _unHook(uint32_t token){ if(!(token < 0)) loopChain.erase(loopChain.begin()+token); }
@@ -347,7 +346,6 @@ extern H4 h4;
 
 template<typename T>
 static void chunker(T const& x,function<void(typename T::const_iterator)> fn){
-    static size_t tLen=sizeof(typename T::const_iterator);
     H4_TIMER p=h4.repeatWhile(
         H4Countdown(x.size()),
         random(H4_JITTER_LO,H4_JITTER_HI), // arbitrary
@@ -355,11 +353,11 @@ static void chunker(T const& x,function<void(typename T::const_iterator)> fn){
             typename T::const_iterator thunk;
             ME->getPartial(&thunk);
             fn(thunk++);
-            ME->storePartial((void*) &thunk,tLen);
+            ME->putPartial((void *)&thunk);
             },fn),
         nullptr,99);
     typename T::const_iterator chunkIt=x.begin();
-    p->storePartial((void*) &chunkIt,tLen);
+    p->createPartial((void *)&chunkIt, sizeof(typename T::const_iterator));
 }
 
 #endif // H4_H

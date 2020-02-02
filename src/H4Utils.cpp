@@ -78,7 +78,7 @@ string stringFromBuff(const byte* data,int len){
 }
 
 string stringFromInt(int i,const char* fmt){
-	char buf[32];
+	char buf[16];
 	sprintf(buf,fmt,i);
 	return string(buf);
 }

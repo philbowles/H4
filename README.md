@@ -398,18 +398,19 @@ If you have *any* other code inside the userLoop, *you are using H4 incorrectly 
 
 All usage should be performed with care and _only_ if you really know what you are doing!
 
-#### "Partial Results"
+#### "Partial Results" / "Worker Threads"
 
-"Worker threads" or tasks that have a big job to do "in the background" can "chunk up" the job by saving intermediate values in an area managed by H4 and preserved between schedules. A simple example might be to do something with a very large array. The user might create an "every" task. On the first pass ,create an iterator, do(X) store the iterator in "partial". On subsequent passes, retrieve the iterator from "partials", increment it, do(X) and store it etc. When the iterator "runs off the end", the task cancels itself. H4 will do any cleanup.
+"Worker threads" or tasks that have a big job to do "in the background" can "chunk up" the job by saving intermediate values in an area managed by H4 and preserved between schedules. A simple example might be to do something with a very large array. The user might create an "every" task. On the first pass ,create an iterator, do(X) and store the iterator in "partial". On subsequent passes, retrieve the iterator from "partials", increment it, do(X) and store it etc. When the iterator "runs off the end", the task cancels itself. H4 will do any cleanup.
 
 ```cpp
-h4.context->storePartial(void* d,size_t l); // save a lump of data d (of length l) in partial results
-h4.getPartial(void* d); // fill an l-length block of data (user-defined) into d from partials results
+h4.context->createPartial(void* d,size_t l); // create a block of data of length l in partial results - will be automatically deleted on task end
+h4.context->getPartial(void* d); // fill a block of data (user-defined) into d from partials results
+h4.context->putPartial(void* d); // save a lump of data d in partial results
 // If d is created by malloc etc, you MUST MUST MUST deallocate it at some point. static data is safer
 // if you can afford the memory.
 ```
 
-As you have guessed by now, `h4.context` is simply a task pointer to an item in the Queue. Most methods and members are public, so TAKE CARE.
+As you may have guessed by now, `h4.context` is simply a task pointer to an item in the Queue. Most methods and members are public, so TAKE CARE.
 
 `h4.context->partial` is a pointer to the partial results and can be used *IN READ ONLY MODE* in preference to `getPartial()`. *DO NOT* run off the end of it: `h4.context->len` contains its size in byes saved from `storePartial()`. *DO NOT CHANGE THE VALUE OF len!!!*
 
@@ -433,7 +434,7 @@ The millisecond time between consecutive calls is randomised to spread the load 
 
 ```
 
-and sample code LINK!! which do exactly that for you.
+[Example Sketch](examples/advanced/chunkier/chunkier.ino)
 
 ---
 
@@ -490,9 +491,10 @@ void*           partial=NULL; // ptr -> Your partial results
 
 *At the end of a task that has run once, it has been scheduled but **it has not been RE-queued** hence `nrq==0`. For all task types except `queueFunction` the value of `nrq+1` is the number of times that `f()` has been run, being 1 schedule + `nrq` RE-schedules.*
 
+[Example Sketch](examples/advanced/TheManyWaysToDie/TheManyWaysToDie.ino)
 
 ---
-(c) 2020 Phil Bowles esparto8266@gmail.com
+(c) 2020 Phil Bowles h4plugins@gmail.com
 
 * [Youtube channel (instructional videos)](https://www.youtube.com/channel/UCYi-Ko76_3p9hBUtleZRY6g)
 * [Blog](https://8266iot.blogspot.com)
