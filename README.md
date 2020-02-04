@@ -155,6 +155,12 @@ Voila: Three different LEDs, all runing at different speeds at the same time Now
 
 ## API
 
+### Global Callbacks
+
+```cpp
+void onReboot(void); // called just prior to reboot to allow user to clean up etc. see function hookReboot
+```
+
 ### Introduction
 
 All timers return a "handle" (type `H4_TIMER` - see footnote*) which can be used to subsequently cancel the task. It can be ignored if not required.
@@ -371,6 +377,12 @@ This section is for experts only.
 ### Diagnostics / Task naming
 
 Call `h4.dumpQ()` to see the current queue on the Serial monitor. Until you do otherwise all of your own tasks will be named "ANON". To give them meaningful names as an aid to debugging, an optional callback exists:
+
+Call `h4reboot` to ...er... reboot the device
+
+Call `hookReboot(H4_FN_VOID f)` to add a function to be called just prior to reboot - this is useful for "cleaning up" / closing files, writing buffers etc. By default it will call `onReboot` so there is no need to explicilty hook that function.
+
+[Example Sketch](examples/advanced/hooks/hooks.ino)
 
 ```cpp
 const char* giveTaskName(uint32_t id);

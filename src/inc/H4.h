@@ -30,10 +30,12 @@ SOFTWARE.
 #ifndef H4_H
 #define H4_H
 
-#define H4_VERSION  "0.3.0"
+#define H4_VERSION  "0.4.0"
 
-#define H4_Q_CAPACITY	20
-#define H4_Q_ABS_MIN     3
+#define H4_JITTER_LO    100 // Entropy lower bound
+#define H4_JITTER_HI    350 // Entropy upper bound
+#define H4_Q_CAPACITY	 20 // Default Q capacity
+#define H4_Q_ABS_MIN      6 // Absolute minimum Q capacity
 
 #if (defined ARDUINO_ARCH_STM32 || defined ARDUINO_ARCH_ESP8266 || defined ARDUINO_ARCH_ESP32)
     #define H4_ARDUINO
@@ -237,14 +239,14 @@ class pq: public priority_queue<task*, vector<task*>, task> {
 //
 //      H 4
 //
-extern void startPlugins();
+extern void h4StartPlugins();
 
 class H4: public pq{
 	friend class task;
                 vector<H4_FN_VOID> loopChain;
-
-    public:    
+    public:       
         static  H4_INT_MAP      trustedNames;
+        static  vector<H4_FN_VOID> rebootChain;
         static  std::unordered_map<string,int> unloadables;
 	    static  H4_TASK_PTR		context;
 	            H4_FN_VOID		startup;
@@ -259,7 +261,7 @@ class H4: public pq{
                             Serial.begin(baud);
                             Serial.print(" H4 version ");Serial.println(H4_VERSION);
                         }
-                        startPlugins();
+                        h4StartPlugins();
                     },baud);
                 }
 
@@ -286,6 +288,7 @@ class H4: public pq{
 //     EXPERT / DIAGNOSTIC
 //                
                 void            dumpQ();
+                void            hookReboot(H4_FN_VOID f){rebootChain.push_back(f); } 
 //       
                 size_t          _capacity(){ return c.capacity(); } 
                 void            _dumpTask(task*);
@@ -340,9 +343,6 @@ extern UART_HandleTypeDef huart3;
 #endif
 
 extern H4 h4;
-
-#define H4_JITTER_LO    100
-#define H4_JITTER_HI    350
 
 template<typename T>
 static void chunker(T const& x,function<void(typename T::const_iterator)> fn){

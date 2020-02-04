@@ -62,19 +62,25 @@ SOFTWARE.
 //
 //      and ...here we go!
 //
-void __attribute__((weak)) h4UserLoop(){}
-void __attribute__((weak)) startPlugins(){}
 void __attribute__((weak)) h4setup(){}
-
-void            h4reboot(){ h4.once(500,[](){ h4rebootCore(); }); }    
+void __attribute__((weak)) h4StartPlugins(){}
+void __attribute__((weak)) h4UserLoop(){}
+void __attribute__((weak)) onReboot(){}
 
 #define H4CH_TRID_CHNK 99
 H4_INT_MAP	        H4::trustedNames={ {H4CH_TRID_CHNK,"CHNK"} };
-
 H4_TIMER 		    H4::context=nullptr;
 std::unordered_map<string,int> H4::unloadables;
+vector<H4_FN_VOID>  H4::rebootChain={onReboot};
 
 H4_TIMER_MAP	    task::singles={};
+
+void  h4reboot(){ 
+    h4.once(1000,[](){
+        for(auto &c:H4::rebootChain) c(); 
+        h4rebootCore();
+    }); 
+}    
 
 H4Random::H4Random(uint32_t rmin,uint32_t rmax){ count=task::randomRange(rmin,rmax);	}
 

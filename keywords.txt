@@ -22,16 +22,25 @@ H4_FN_COUNT	KEYWORD1
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
+
 cancel	KEYWORD2
 cancelAll	KEYWORD2
 cancelSingleton	KEYWORD2
 chunker KEYWORD2
+createPartial   KEYWORD2
 dumpQ	KEYWORD2
+endF    KEYWORD2
+endU    KEYWORD2
+endC    KEYWORD2
+endK    KEYWORD2
 every	KEYWORD2
 everyRandom	KEYWORD2
 finishEarly	KEYWORD2
 finishIf	KEYWORD2
 finishNow	KEYWORD2
+getPartial  KEYWORD2
+hookReboot  KEYWORD2
+hreboot	KEYWORD2
 h4setup	KEYWORD2
 loop	KEYWORD2
 nTimes	KEYWORD2
@@ -39,12 +48,12 @@ nTimesRandom	KEYWORD2
 once	KEYWORD2
 onceRandom	KEYWORD2
 pr  KEYWORD2
+putPartial  KEYWORD2
 queueFunction	KEYWORD2
 randomTimes	KEYWORD2
 randomTimesRandom	KEYWORD2
 repeatWhile	KEYWORD2
 repeatWhileEver	KEYWORD2
-
 isNumeric	KEYWORD2
 join	KEYWORD2
 replaceAll	KEYWORD2
@@ -59,3 +68,4 @@ trim	KEYWORD2
 #######################################
 # Constants (LITERAL1)
 #######################################
+
