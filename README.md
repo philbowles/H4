@@ -1,4 +1,4 @@
-# H4 vn 0.2.0
+# H4 vn 0.4.0
 
 ## Cross-platform functional scheduler / timer for ESP8266/32, STM32-NUCLEO, RPi and Ubuntu
 

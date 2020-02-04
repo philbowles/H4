@@ -1,8 +1,8 @@
 2020/02/02  0.4.0   added global callback onReboot nd hookReboot API function
-                    added hooks.ino exampls in /advanced
+                    added hooks.ino example in /advanced
 
 2020/02/02  0.3.0   bugfix to chunker remove memory leak
-                    add creatPartial / getPartial
+                    add createPartial / getPartial
 
 2020/01/16  0.2.1   added replaceAll to utils
 
