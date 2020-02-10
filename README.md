@@ -51,7 +51,7 @@ In truth it is just a scheduler with some fancy timing functions that can call
 
 H4 is the foundation that allows for the simple addition of modules (or "plugins") to handle WiFi, MQTT, Webserver, GPIO handling and pretty much anything else you'd ever want to do with your MCU.
 
-For more information or to download the optional H4Plugins library, go to ** T.B.A. (coming soon!) **
+For more information or to download the optional H4Plugins library, go to [H4Plugins](https://github.com/philbowles/h4plugins)
 
 (* *on a single-core MCU no two tasks are ever truly simultaneous - H4 just makes it **look** like they are and allows you to code as if they were*)
 

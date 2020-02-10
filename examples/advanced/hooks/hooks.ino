@@ -66,7 +66,7 @@ void userLoop(){
 }
 
 void onReboot(){
-    Srial.println("This always gets called without you needing to 'hook' it");
+    Serial.println("This always gets called without you needing to 'hook' it");
 }
 /*
 
