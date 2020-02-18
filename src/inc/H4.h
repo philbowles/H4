@@ -30,7 +30,7 @@ SOFTWARE.
 #ifndef H4_H
 #define H4_H
 
-#define H4_VERSION  "0.4.0"
+#define H4_VERSION  "0.4.1"
 
 #define H4_JITTER_LO    100 // Entropy lower bound
 #define H4_JITTER_HI    350 // Entropy upper bound
@@ -247,7 +247,7 @@ class H4: public pq{
     public:       
         static  H4_INT_MAP      trustedNames;
         static  vector<H4_FN_VOID> rebootChain;
-        static  std::unordered_map<string,int> unloadables;
+        static  std::unordered_map<uint32_t,uint32_t> unloadables;
 	    static  H4_TASK_PTR		context;
 	            H4_FN_VOID		startup;
 
@@ -292,12 +292,11 @@ class H4: public pq{
 //       
                 size_t          _capacity(){ return c.capacity(); } 
                 void            _dumpTask(task*);
-                bool            _hasName(uint32_t n){ return trustedNames.count(n); }     
                 void            _hookEvent(H4_FN_TASK f){ taskEvent=f; }     
-                void            _hookLoop(H4_FN_VOID f,H4_INT_MAP names,string pid);
+                void            _hookLoop(H4_FN_VOID f,H4_INT_MAP names,uint32_t subid);
                 void            _matchTasks(function<bool(task*)> p,function<void(task*)> f);
                 void            _unHook(uint32_t token){ if(!(token < 0)) loopChain.erase(loopChain.begin()+token); }
-                size_t          _size(){ return size(); }
+//                size_t          _size(){ return size(); }
 };
 
 #define ME H4::context
@@ -348,7 +347,7 @@ template<typename T>
 static void chunker(T const& x,function<void(typename T::const_iterator)> fn){
     H4_TIMER p=h4.repeatWhile(
         H4Countdown(x.size()),
-        random(H4_JITTER_LO,H4_JITTER_HI), // arbitrary
+        task::randomRange(H4_JITTER_LO,H4_JITTER_HI), // arbitrary
         bind([](function<void(typename T::const_iterator)> fn){ 
             typename T::const_iterator thunk;
             ME->getPartial(&thunk);

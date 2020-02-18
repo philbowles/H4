@@ -36,7 +36,7 @@ SOFTWARE.
 
 using namespace std;
 
-bool		       isNumeric(const string& s);
+bool		    isNumeric(const string& s);
 string 		    join(const vector<string>& vs,const char* delim="\n");
 string          replaceAll(const string& s,const string& f,const string& r);
 vector<string>  split(const string& s, const char* delimiter="\n");

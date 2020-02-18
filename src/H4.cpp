@@ -70,7 +70,7 @@ void __attribute__((weak)) onReboot(){}
 #define H4CH_TRID_CHNK 99
 H4_INT_MAP	        H4::trustedNames={ {H4CH_TRID_CHNK,"CHNK"} };
 H4_TIMER 		    H4::context=nullptr;
-std::unordered_map<string,int> H4::unloadables;
+unordered_map<uint32_t,uint32_t> H4::unloadables;
 vector<H4_FN_VOID>  H4::rebootChain={onReboot};
 
 H4_TIMER_MAP	    task::singles={};
@@ -250,9 +250,9 @@ void task::createPartial(void* d,size_t l){
 //
 extern  void h4setup();
 
-void H4::_hookLoop(H4_FN_VOID f,H4_INT_MAP names,string pid){
+void H4::_hookLoop(H4_FN_VOID f,H4_INT_MAP names,uint32_t subid){
     if(f) {
-        unloadables[pid]=loopChain.size();
+        unloadables[subid]=loopChain.size();
         loopChain.push_back(f);
     }
     trustedNames.insert(names.begin(),names.end());
