@@ -117,11 +117,10 @@ task* 	 pq::endK(task* t){ return reinterpret_cast<task*>(gpFramed(t,bind(&task:
 
 task* pq::next(){
 	task* t=nullptr;
-    //uint32_t now=(uint32_t) h4GetTick(); // can't do inside loop...clocks dont work when noInterrupts!!!
+    uint32_t now=(uint32_t) h4GetTick(); // can't do inside loop...clocks dont work when noInterrupts!!!
 	noInterrupts();
 	if(size()){
-//	   if(!((int)(top()->at -  now)) > 0) { // .LT. Or .EQ. 
-	   if(((int)(top()->at -  h4GetTick())) < 0) {
+	   if(((int)(top()->at -  now)) < 1) {
 		t=top();
 		pop();
 	  }
