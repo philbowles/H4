@@ -32,7 +32,7 @@ SOFTWARE.
 
 #define H4_VERSION  "0.4.2"
 
-#define H4_NO_USERLOOP      // improves perfromance
+//#define H4_NO_USERLOOP      // improves perfromance
 
 #define H4_JITTER_LO    100 // Entropy lower bound
 #define H4_JITTER_HI    350 // Entropy upper bound
