@@ -117,9 +117,10 @@ task* 	 pq::endK(task* t){ return reinterpret_cast<task*>(gpFramed(t,bind(&task:
 
 task* pq::next(){
 	task* t=nullptr;
+    uint32_t now=(uint32_t) h4GetTick(); // can't do inside loop...clocks dont work when noInterrupts!!!
 	noInterrupts();
 	if(size()){
-	   if((int)(top()->at -  h4GetTick()) < 0) { //
+	   if(!((int)(top()->at -  now)) > 0) { // .LT. Or .EQ. 
 		t=top();
 		pop();
 	  }
@@ -216,7 +217,7 @@ uint32_t task::endF(){
 
 uint32_t task::endU(){
 	_chain();
-	return nrq+endK(); // oh cheeky, cheeky / oh naughty sneaky
+	return nrq+endK();
 }
 
 uint32_t task::endC(H4_FN_TIF f){
@@ -238,12 +239,12 @@ void task::requeue(){
 	h4.qt(this);
 }
 
-void task::schedule(){ at=h4GetTick() + randomRange(rmin,rmax); }
+void task::schedule(){ at=(uint32_t) h4GetTick() + randomRange(rmin,rmax); }
 
 void task::createPartial(void* d,size_t l){
 	partial=malloc(l);
 	memcpy(partial,d,l);
-        len = l;
+    len = l;
 }
 //
 //      H4
@@ -259,8 +260,8 @@ void H4::_hookLoop(H4_FN_VOID f,H4_INT_MAP names,uint32_t subid){
 }  
 #ifdef ARDUINO
         void setup(){
-                h4.startup();
-                h4setup();
+            h4.startup();
+            h4setup();
         }        
         
         void loop(){ h4.loop(); }
@@ -360,7 +361,6 @@ void H4::_dumpTask(task* t){
 using namespace std::placeholders;
 
 void H4::dumpQ(){
-//	Serial.printf("Free heap=%u Qs=%d\n",ESP.getFreeHeap(),size());
 	Serial.print("Due @tick UID        Type                     Min       Max       nRQ\n");  
     if(context) _dumpTask(context);     
 	_matchTasks(

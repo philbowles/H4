@@ -30,7 +30,9 @@ SOFTWARE.
 #ifndef H4_H
 #define H4_H
 
-#define H4_VERSION  "0.4.1"
+#define H4_VERSION  "0.4.2"
+
+#define H4_NO_USERLOOP      // improves perfromance
 
 #define H4_JITTER_LO    100 // Entropy lower bound
 #define H4_JITTER_HI    350 // Entropy upper bound
@@ -296,7 +298,6 @@ class H4: public pq{
                 void            _hookLoop(H4_FN_VOID f,H4_INT_MAP names,uint32_t subid);
                 void            _matchTasks(function<bool(task*)> p,function<void(task*)> f);
                 void            _unHook(uint32_t token){ if(!(token < 0)) loopChain.erase(loopChain.begin()+token); }
-//                size_t          _size(){ return size(); }
 };
 
 #define ME H4::context
