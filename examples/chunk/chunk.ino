@@ -24,13 +24,13 @@ vector<string> sharks2={"Oceanic White Tip","ExitWater","Bamboo Shark","Nurse Sh
 vector<string> sharks1={"Bronze Whaler","Tiger","Bull","Great White","StayIn","Leopard Shark","Whale Shark","Basking Shark"};
 
 void workerThread1(){
-  Serial.printf("T=%d Type of Monkey: %s\n",millis(),CSTR(monkeys.back()));
+  Serial.print("T=");Serial.print(millis());Serial.print(" Type of Monkey: ");Serial.println(CSTR(monkeys.back()));
   monkeys.pop_back();
 }
 
 void workerThread2(){
   static int i=0;
-  Serial.printf("T=%d Type of ape No. %d: %s\n",millis(),++i,CSTR(apes.back()));
+  Serial.print("T=");Serial.print(millis());Serial.print(" Type of Ape: ");Serial.println(CSTR(apes.back()));
   apes.pop_back();
 }
 
@@ -43,17 +43,21 @@ void refSharks(vector<string>& r){
       if(shark=="ExitWater") h4.cancel();  // exits immediately you don't get eaten 
       else {
         if(shark=="StayIn") h4.finishEarly();  // jumps to end, you get eaten
-        else Serial.printf("%s is harmless\n",CSTR(shark));
+        else {
+          Serial.print(CSTR(shark));Serial.println(" is harmless");
+        }
       }
       r.pop_back();            
     },ref(r)),
-    bind([](vector<string>& r){ if(r.size()) Serial.printf("You got nibbled by a %s\n",CSTR(r.back())); },ref(r))
+    bind([](vector<string>& r){ 
+        if(r.size()) { Serial.print("You got nibbled by a ");Serial.println(CSTR(r.back())); }
+      },ref(r))
   );  
 }
 
 void h4setup(){
   h4.repeatWhile([](){ return monkeys.size(); },1000,workerThread1); // always once!
-  h4.repeatWhile([](){ return apes.size(); },1000,workerThread2,[](){ Serial.printf("cut off in my prime...ate\n"); }); // always once!
+  h4.repeatWhile([](){ return apes.size(); },1000,workerThread2,[](){ Serial.println("cut off in my prime...ate"); }); // always once!
   refSharks(sharks3);
   refSharks(sharks2);
   refSharks(sharks1);

@@ -1,4 +1,4 @@
-# H4 vn 0.4.1
+# H4 (version 0.5.0)
 
 ## Cross-platform functional scheduler / timer for ESP8266/32, STM32-NUCLEO, RPi and Ubuntu
 
@@ -6,25 +6,15 @@
 
 ---
 
-## Important note for platformIO users
-
-For a long time now, platformIO has not been 100% Arduino compatible. Despite people like me raising issues, they still haven't fixed the (very simple) problem. So before you can use it, you will have to get their support to fix it. Here's what to tell them:
-
-"The PIO build system STILL does not include the correct Arduino-compatible compiler defines in the command line, e.g. -DARDUINO_ARCH_ESP32"
-
-If enough people do this, they might do something about it. But since they haven't despite knowing about it for nearly 2 years, I wouldn't hold your breath.
-
-Sadly then, I cannot provide support for PlatformIO until they have fixed it.
-
 ## Why do I need it?
 
 Successfully running multiple simultaneous* tasks on most MCUs is notoriously difficult. It usually requires either a ready-made RTOS (e.g. freeRTOS) or a great deal of experience of low-level C/C++ programming and an intimate knowledge of the MCU timer architecture. Both require an intimidating learning curve and most beginners have little knowledge of either.
 
 To make matters worse, the vast majority of examples available simple one-function feature demos written without any concept of resource sharing. Trying to combine two such examples that require co-operation but are written with none is a recipe that leads inevitably to crashes, reboots and "random" failures, often dispiritng and/or deterring the newcomer.
 
-The final "passion killer" is that practically no beginners understand the difference between synchronous (a.k.a. "blocking") and asynchronous ("non-blocking") code. Unfortunately, running simultaneous* tasks *absolutley* requires that they do. Many examples run blocking code, some don't. Mixing the two willy-nilly because you never knew you shouldn't is again the source of a large proportion of problems and questions seen in support forums.
+The final "passion killer" is that very few beginners understand the difference between synchronous (a.k.a. "blocking") and asynchronous (a.k.a "non-blocking") code. Unfortunately, running simultaneous* tasks *absolutley* requires that they do. Many examples run blocking code, some don't. Mixing the two willy-nilly because you never knew you shouldn't is again the source of a large proportion of problems and questions seen in support forums.
 
-If you want MQTT *and* a webserver then, you are in for a lot of hard work and many failures unless you are already familiar with all of the above.
+If - for example - you want MQTT *and* a webserver then, you are in for a lot of hard work and many failures unless you are already familiar with all of the above.
 
 ### Limitations of the Ticker library
 
@@ -49,7 +39,7 @@ In truth it is just a scheduler with some fancy timing functions that can call
 
 ### ...and more: the "Plugin" system
 
-H4 is the foundation that allows for the simple addition of modules (or "plugins") to handle WiFi, MQTT, Webserver, GPIO handling and pretty much anything else you'd ever want to do with your MCU.
+H4 is the foundation that allows for the simple addition of modules (or "plugins") to handle WiFi, MQTT, Webserver, GPIO handling and pretty much anything else you'd ever want to do with your MCU / IOT "Thing".
 
 For more information or to download the optional H4Plugins library, go to [H4Plugins](https://github.com/philbowles/h4plugins)
 
@@ -67,11 +57,11 @@ All you need to know is that you no longer write your sketch with `setup` and `l
 
 Those parts of your code are known as "callback functions" or more simply "callbacks". You define what happens inside the callback and H4 decides when to run it.
 
-Your sketch then will simply be a series of short callback functions that do what you need to do and a mandatory function `h4setup` where you tell H4 about your callback functions and what type of external events should occur to make them them run.
+Your sketch will simply be a series of short callback functions that do what you need to do and a function `h4setup` where you tell H4 about what type of external events you want to manage and which of your callback functions should be called when one of those events occurs.
 
 The things you do in `h4setup` are the same kind of thing you used to do in the standard `setup` but since there is no `loop`, all the things you used to do there are now in your callback function(s). The good thing is that you don't have to mess with `millis()` or `Ticker`or worry about what code works best where and what is not allowed in a `Ticker` etc because all you code is called from `loop` by H4.
 
-All the code you write is simple "normal" code that does not need to worry about any of your other code interfering with it (unless you *make* it, of course! H4 is clever, but it's not *magic* - you can still crash the MCU with bad code!).
+All the code you write is "normal" code that does not need to worry about any of your other code interfering with it (unless you *make* it, of course! H4 is clever, but it's not *magic* - you can still easily crash the MCU with bad code!).
 
 The one thing you will *never* need to do is call `delay` or `yield`. Ever. Repeat after me: "I will never call `delay` or `yield` in an H4 sketch".
 
@@ -90,6 +80,7 @@ H4 invokes a user-defined callback when an "event" occurs. In this basic library
 * An incoming MQTT request
 * A WiFi disconnection or reconnection
 * An MQTT server disconnection or reconnection
+* A "presence detection" event, e.g. a mobile device joining/leaving the network
 * An Alexa voice command
 
 ### The callback function:
@@ -149,15 +140,16 @@ void h4setup(){ // do the same type of thing as the standard setup
 
 [Example Code](examples/multiblink/multiblink.ino)
 
-Voila: Three different LEDs, all runing at different speeds at the same time Now think what "normal" code you would have to write to do that. Now do it with 5 LEDs...using H4 it's trivial. The "usual" way is a lot longer, a lot harder, more error-prone and looks awful.
+Voila: Three different LEDs, all running at different speeds at the same time Now think what "normal" code you would have to write to do that. Now do it with 5 LEDs...using H4 it's trivial. The "usual" way is a lot longer, a lot harder, more error-prone and looks awful.
 
 ---
 
 ## API
 
-### Global Callbacks
+### Global Callbacks (optional)
 
 ```cpp
+void h4UserLoop(void); // called once per main loop: ONLY USE THIS IF YOU KNOW EXACTLY WHAT YOU ARE DOING!
 void onReboot(void); // called just prior to reboot to allow user to clean up etc. see function hookReboot
 ```
 
@@ -169,7 +161,7 @@ With one exception (`queueFunction`) all tasks start _after_ the first specified
 
 All callbacks take an optional "chain" function (type `H4_FN_VOID`) which is called on completion of the timer (if ever). "Completion" can occur one of three ways:
 
-* Naturally-expiring (e.g. "`once`") task exits
+* Naturally-expiring (e.g. "`onceXXX`") task exits
 * Free-running (e.g. "`everyXXX`") task is cancelled by user code
 * (Rarely) Task can terminate itself arbitrarily
 
@@ -223,7 +215,7 @@ queueFunction // run task NOW* - no initial interval t.[* on next schedule: MCU-
 randomTimes // run task any number of times nMin < n < nMax at intervals of t
 randomTimesRandom // run task random number of time nMin < n < nMax at random intervals of nMin < t < nMax milliseconds
 repeatWhile // run task until user-defined "countdown" function (type H4_FN_COUNT) returns zero then cancel
-repeatWhileEver // run task until user-defined "countdown" function (type H4_FN_COUNT) returns zero then reschedule [ Note 1]
+repeatWhileEver // run task until user-defined "countdown" function (type H4_FN_COUNT) returns zero then reschedule [ See Note 1]
 
   common parameters:
 
@@ -374,23 +366,13 @@ h4.loop();
 
 This section is for experts only.
 
-### Diagnostics / Task naming
-
-Call `h4.dumpQ()` to see the current queue on the Serial monitor. Until you do otherwise all of your own tasks will be named "ANON". To give them meaningful names as an aid to debugging, an optional callback exists:
+### Diagnostics / Task 
 
 Call `h4reboot` to ...er... reboot the device
 
 Call `hookReboot(H4_FN_VOID f)` to add a function to be called just prior to reboot - this is useful for "cleaning up" / closing files, writing buffers etc. By default it will call `onReboot` so there is no need to explicilty hook that function.
 
 [Example Sketch](examples/advanced/hooks/hooks.ino)
-
-```cpp
-const char* giveTaskName(uint32_t id);
-```
-
-id will contain the task's unique id (users should stay below 50) and your function must return a C-style string with the corresponding task name, usually by using the id as an index into a table.
-
-[Example Sketch](examples/advanced/tasknames/tasknames.ino)
 
 ---
 

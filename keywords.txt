@@ -18,6 +18,8 @@ H4_TIMER	KEYWORD1
 H4_FN_TIF	KEYWORD1
 H4_FN_VOID	KEYWORD1
 H4_FN_COUNT	KEYWORD1
+H4_INT_MAP	KEYWORD1
+H4_FN_COUNT	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -50,12 +52,15 @@ pr	KEYWORD2
 putPartial	KEYWORD2
 queueFunction	KEYWORD2
 randomTimes	KEYWORD2
+randomRange	KEYWORD2
 randomTimesRandom	KEYWORD2
 repeatWhile	KEYWORD2
 repeatWhileEver	KEYWORD2
+requeue	KEYWORD2
 isNumeric	KEYWORD2
 join	KEYWORD2
 replaceAll	KEYWORD2
+schedule	KEYWORD2
 split	KEYWORD2
 stringFromInt	KEYWORD2
 stringFromBuff	KEYWORD2

@@ -30,9 +30,9 @@ SOFTWARE.
 #ifndef H4_H
 #define H4_H
 
-#define H4_VERSION  "0.4.1"
+#define H4_VERSION  "0.5.0"
 
-//#define H4_NO_USERLOOP      // improves perfromance
+//#define H4_NO_USERLOOP      // improves performance
 
 #define H4_JITTER_LO    100 // Entropy lower bound
 #define H4_JITTER_HI    350 // Entropy upper bound
@@ -221,10 +221,10 @@ class task{
 //
 //		P R I O R I T Y   Q U E U E (has to be after task)
 //
-class pq: public priority_queue<task*, vector<task*>, task> {
+using H4Q = priority_queue<task*, vector<task*>, task>;
+class pq: public H4Q {
 	protected:
             task*			add(H4_FN_VOID _f,uint32_t _m,uint32_t _x,H4_FN_COUNT _r,H4_FN_VOID _c,uint32_t _u=0,bool _s=false);
-    //        void			clear();
             uint32_t 		gpFramed(task* t,function<uint32_t()> f);
             bool  			has(task* t){ return find(c.begin(),c.end(),t) != c.end(); }
             uint32_t		endF(task* t);
@@ -234,8 +234,6 @@ class pq: public priority_queue<task*, vector<task*>, task> {
             task* 			next();
             void  			qt(task* t);
             void  			reserve(size_type n){ c.reserve(n); }
-            vector<task*> 	select(function<bool(task*)> p);
-
             H4_FN_TASK      taskEvent=[](task*,char){};
 };
 //
@@ -247,7 +245,6 @@ class H4: public pq{
 	friend class task;
                 vector<H4_FN_VOID> loopChain;
     public:       
-        static  H4_INT_MAP      trustedNames;
         static  vector<H4_FN_VOID> rebootChain;
         static  std::unordered_map<uint32_t,uint32_t> unloadables;
 	    static  H4_TASK_PTR		context;
@@ -287,17 +284,13 @@ class H4: public pq{
                 uint32_t 		finishNow(H4_TASK_PTR t = context) { return endU(t); }
                 bool			finishIf(H4_TASK_PTR t, H4_FN_TIF f) { return endC(t, f); }
 //
-//     EXPERT / DIAGNOSTIC
-//                
-                void            dumpQ();
-                void            hookReboot(H4_FN_VOID f){rebootChain.push_back(f); } 
-//       
+                void            hookReboot(H4_FN_VOID f){ rebootChain.push_back(f); } 
+//              syscall only
                 size_t          _capacity(){ return c.capacity(); } 
-                void            _dumpTask(task*);
+                vector<task*>   _copyQ();
                 void            _hookEvent(H4_FN_TASK f){ taskEvent=f; }     
-                void            _hookLoop(H4_FN_VOID f,H4_INT_MAP names,uint32_t subid);
-                void            _matchTasks(function<bool(task*)> p,function<void(task*)> f);
-                void            _unHook(uint32_t token){ if(!(token < 0)) loopChain.erase(loopChain.begin()+token); }
+                void            _hookLoop(H4_FN_VOID f,uint32_t subid);
+                bool            _unHook(uint32_t token);
 };
 
 #define ME H4::context

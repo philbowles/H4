@@ -68,7 +68,6 @@ void __attribute__((weak)) h4UserLoop(){}
 void __attribute__((weak)) onReboot(){}
 
 #define H4CH_TRID_CHNK 99
-H4_INT_MAP	        H4::trustedNames={ {H4CH_TRID_CHNK,"CHNK"} };
 
 H4_TIMER 		    H4::context=nullptr;
 unordered_map<uint32_t,uint32_t> H4::unloadables;
@@ -91,13 +90,7 @@ task* pq::add(H4_FN_VOID _f,uint32_t _m,uint32_t _x,H4_FN_COUNT _r,H4_FN_VOID _c
 	qt(t);
 	return t;
 }
-/*
-void pq::clear(){
-	noInterrupts();
-	for(auto const& qi:c) qi->endK();
-	interrupts();
-}
-*/
+
 uint32_t pq::gpFramed(task* t,H4_FN_RTPTR f){
 	uint32_t rv=0;
 	if(t){
@@ -135,14 +128,6 @@ void pq::qt(task* t){
 	push(t);
 	interrupts();
     taskEvent(t,'S');
-}
-
-vector<task*> pq::select(function<bool(task*)> p){
-	vector<task*> match;
-	noInterrupts();
-	for(auto const& qi:c) if(p(qi)) match.push_back(qi);
-	interrupts();
-	return match;
 }
 //
 //		task
@@ -252,13 +237,30 @@ void task::createPartial(void* d,size_t l){
 //
 extern  void h4setup();
 
-void H4::_hookLoop(H4_FN_VOID f,H4_INT_MAP names,uint32_t subid){
+vector<task*> H4::_copyQ(){
+    vector<task*> t;
+    noInterrupts();
+    t=c;
+    interrupts();
+    return t;
+}
+
+void H4::_hookLoop(H4_FN_VOID f,uint32_t subid){
     if(f) {
         unloadables[subid]=loopChain.size();
         loopChain.push_back(f);
     }
-    trustedNames.insert(names.begin(),names.end());
-}  
+}
+
+bool H4::_unHook(uint32_t subid){
+    if(unloadables.count(subid)){
+        loopChain.erase(loopChain.begin()+unloadables[subid]);
+        unloadables.erase(subid);
+        return true;
+    }
+    return false;
+}
+
 #ifdef ARDUINO
         void setup(){
             h4.startup();
@@ -316,64 +318,3 @@ extern "C" {
 #ifndef __cplusplus
 }
 #endif
-//
-//  DIAGNOSTIC
-//
-void H4::_matchTasks(function<bool(task*)> p,function<void(task*)> f){
-    vector<task*> vesta=select(p);
-    sort(vesta.begin(),vesta.end(),[](const task* a, const task* b){ return a->at < b->at; });
-    for(auto const& m:vesta) if(has(m)) f(m);
-}
-
-    
-H4_INT_MAP tasktypes={
-    {3,"evry"}, // 3
-    {4,"evrn"}, // 4
-    {5,"ntim"}, // 5
-    {6,"ntrn"}, // 6
-    {7,"once"}, // 7
-    {8,"1xrn"}, // 8
-    {9,"qfun"}, // 9
-    {10,"rntx"}, // 10
-    {11,"rnrn"}, // 11
-    {12,"rptw"}, // 12
-    {13,"rpwe"}  // 13
-};
-
-const char* __attribute__((weak)) giveTaskName(uint32_t id){ return "ANON"; }
-
-void H4::_dumpTask(task* t){
-    char buf[256];
-    uint32_t type=t->uid/100;
-    uint32_t id=t->uid%100;
-    sprintf(buf,"%09lu 0x%08lx %04d %s (%s/%s) %9d %9d %9d\n",
-        t->at,
-        (unsigned long) t,
-        t->uid,
-        t->singleton ? "S":" ",
-        tasktypes.count(type) ? CSTR(tasktypes[type]):"NDEF",
-        (trustedNames.count(id) ? CSTR(trustedNames[id]):giveTaskName(id)),
-        t->rmin,
-        t->rmax,
-        t->nrq);
-    Serial.print(buf);
-}
-
-using namespace std::placeholders;
-
-void H4::dumpQ(){
-	Serial.print("Due @tick UID        Type                     Min       Max       nRQ\n");  
-    if(context) _dumpTask(context);     
-	_matchTasks(
-		[](task* t){ return true; },
-        bind(&H4::_dumpTask,this,_1)
-	);     
-}
-/*
-void  H4::postMsg(string s){
-    long startTime=micros();
-    h4.queueFunction(bind([](string s,long startTime){ 
-        Serial.print(CSTR(s));Serial.print(" ran @ ");Serial.println(startTime);
-    },s,startTime));    
-}
-*/
