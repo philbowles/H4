@@ -30,7 +30,7 @@ SOFTWARE.
 #ifndef H4_H
 #define H4_H
 
-#define H4_VERSION  "0.5.1"
+#define H4_VERSION  "0.5.4"
 
 //#define H4_NO_USERLOOP      // improves performance
 //#define H4_COUNT_LOOPS true // DIAGNOSTICS

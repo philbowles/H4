@@ -6,9 +6,9 @@ void h4setup() {
         Serial.print(millis());Serial.println(" RUDE INTERRUPTION");
     },nullptr,4);
 
-    h4.hookReboot([](){ 
-        Serial.println("USER-DEFINED REBOOT HOOK"); // will run just before reboot
-    });
+    h4.hookReboot([](){ Serial.println("USER-DEFINED REBOOT HOOK 1 "); });
+    h4.hookReboot([](){ Serial.println("USER-DEFINED REBOOT HOOK 2 "); });
+    h4.hookReboot([](){ Serial.println("USER-DEFINED REBOOT HOOK 3"); });
 
     h4.every(1000,[]{ Serial.print(millis());Serial.println(" PING "); },nullptr,1);  
   
@@ -45,5 +45,5 @@ void h4UserLoop(){
 }
 
 void onReboot(){
-    Serial.println("This always gets called without you needing to 'hook' it");
+    Serial.println("This always gets called LAST and without you needing to 'hook' it");
 }
