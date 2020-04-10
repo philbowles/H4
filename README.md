@@ -6,6 +6,8 @@
 
 ---
 
+[Release Notes](changelog.txt)
+
 ## Why do I need it?
 
 Successfully running multiple simultaneous* tasks on most MCUs is notoriously difficult. It usually requires either a ready-made RTOS (e.g. freeRTOS) or a great deal of experience of low-level C/C++ programming and an intimate knowledge of the MCU timer architecture. Both require an intimidating learning curve and most beginners have little knowledge of either.
