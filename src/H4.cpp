@@ -29,6 +29,10 @@ SOFTWARE.
 #include <H4.h>
 #include <H4Utils.h>
 
+#ifdef H4_COUNT_LOOPS
+uint32_t h4Nloops;
+#endif
+
 #ifndef ARDUINO
 	delegateSerial Serial;
 	extern "C" {	
@@ -71,15 +75,19 @@ void __attribute__((weak)) onReboot(){}
 
 H4_TIMER 		    H4::context=nullptr;
 unordered_map<uint32_t,uint32_t> H4::unloadables;
-vector<H4_FN_VOID>  H4::rebootChain={onReboot};
+vector<H4_FN_VOID>  H4::rebootChain={};
 
 H4_TIMER_MAP	    task::singles={};
 
-void  h4reboot(){ 
-    h4.once(1000,[](){
-        for(auto &c:H4::rebootChain) c(); 
-        h4rebootCore();
-    }); 
+void H4::_runRebootChain(){
+    reverse(H4::rebootChain.begin(),H4::rebootChain.end()); 
+    for(auto &c:H4::rebootChain) c();
+    onReboot();
+}
+
+void h4reboot(){ 
+    H4::_runRebootChain();
+    h4rebootCore();
 }    
 
 H4Random::H4Random(uint32_t rmin,uint32_t rmax){ count=task::randomRange(rmin,rmax);	}
@@ -313,6 +321,9 @@ extern "C" {
         for(auto f:loopChain) f();
 #ifndef H4_NO_USERLOOP
 		h4UserLoop();
+#endif
+#ifdef H4_COUNT_LOOPS
+        h4Nloops++;
 #endif
 	}
 #ifndef __cplusplus

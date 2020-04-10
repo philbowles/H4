@@ -1,6 +1,6 @@
 #include <H4.h>
 //
-//  Demonstrates the chunker template function
+//  Demonstrates the h4Chunker template function
 //
 //  calls your function with an iterator to the "next" item in a data structure
 //
@@ -30,9 +30,9 @@ void chunkShark(vector<string>::const_iterator i){
 
 void h4setup(){
   h4.nTimes(10,250,[](){ Serial.println("Tick"); });  
-  chunker<vector<string>>(sharks1,chunkShark);
-  chunker<vector<string>>(sharks2,chunkShark);
-  chunker<vector<string>>(sharks3,chunkShark);
+  h4Chunker<vector<string>>(sharks1,chunkShark);
+  h4Chunker<vector<string>>(sharks2,chunkShark);
+  h4Chunker<vector<string>>(sharks3,chunkShark);
 }
 /*
  Sample Output:

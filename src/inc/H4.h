@@ -30,9 +30,10 @@ SOFTWARE.
 #ifndef H4_H
 #define H4_H
 
-#define H4_VERSION  "0.5.0"
+#define H4_VERSION  "0.5.1"
 
 //#define H4_NO_USERLOOP      // improves performance
+//#define H4_COUNT_LOOPS true // DIAGNOSTICS
 
 #define H4_JITTER_LO    100 // Entropy lower bound
 #define H4_JITTER_HI    350 // Entropy upper bound
@@ -240,6 +241,9 @@ class pq: public H4Q {
 //      H 4
 //
 extern void h4StartPlugins();
+#ifdef H4_COUNT_LOOPS
+    extern uint32_t h4Nloops;
+#endif
 
 class H4: public pq{
 	friend class task;
@@ -259,6 +263,10 @@ class H4: public pq{
                         if(baud) {
                             Serial.begin(baud);
                             Serial.print(" H4 version ");Serial.println(H4_VERSION);
+#ifdef H4_COUNT_LOOPS
+                            Serial.println("COUNTING LOOPS");
+                            every(1000,[]{ Serial.printf("%u\n",h4Nloops); h4Nloops=0;},nullptr,13);
+#endif
                         }
                         h4StartPlugins();
                     },baud);
@@ -290,6 +298,7 @@ class H4: public pq{
                 vector<task*>   _copyQ();
                 void            _hookEvent(H4_FN_TASK f){ taskEvent=f; }     
                 void            _hookLoop(H4_FN_VOID f,uint32_t subid);
+        static  void            _runRebootChain();
                 bool            _unHook(uint32_t token);
 };
 
@@ -338,7 +347,7 @@ extern UART_HandleTypeDef huart3;
 extern H4 h4;
 
 template<typename T>
-static void chunker(T const& x,function<void(typename T::const_iterator)> fn){
+static void h4Chunker(T const& x,function<void(typename T::const_iterator)> fn){
     H4_TIMER p=h4.repeatWhile(
         H4Countdown(x.size()),
         task::randomRange(H4_JITTER_LO,H4_JITTER_HI), // arbitrary

@@ -1,8 +1,14 @@
-2020/02/13  0.5.0   remove dumpQ / trustednames (moved up into H4Plugins)
+2020/04/10  0.5.4   hookChain now runs in reverse order of hooking
+                        with global onReboot always called last
+                        examples advanced/hooks changed to fall inline with this
+                        version jump to align with h4plugins
+2020/03/31  0.5.1   renme chunker -> h4Chunker
+                    add compile-time loop count diagnostics
+2020/02/13  0.5.0   remove dumpQ / trustednames (moved up into H4Plugins) 
 2020/02/05  0.4.0   added global callback onReboot nd hookReboot API function
                     added hooks.ino example in /advanced
 
-2020/02/02  0.3.0   bugfix to chunker remove memory leak
+2020/02/02  0.3.0   bugfix to h4Chunker remove memory leak
                     add createPartial / getPartial
 
 2020/01/16  0.2.1   added replaceAll to utils

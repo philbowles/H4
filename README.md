@@ -1,4 +1,4 @@
-# H4 (version 0.5.0)
+# H4 (version 0.5.4)
 
 ## Cross-platform functional scheduler / timer for ESP8266/32, STM32-NUCLEO, RPi and Ubuntu
 
@@ -408,11 +408,11 @@ As you may have guessed by now, `h4.context` is simply a task pointer to an item
 
 `h4.context->partial` is a pointer to the partial results and can be used *IN READ ONLY MODE* in preference to `getPartial()`. *DO NOT* run off the end of it: `h4.context->len` contains its size in byes saved from `storePartial()`. *DO NOT CHANGE THE VALUE OF len!!!*
 
-That is just an example: the `chunker` template function already does it for you:
+That is just an example: the `h4Chunker` template function already does it for you:
 
 ```cpp
 template<typename T>
-static void chunker(T const& x,function<void(typename T::const_iterator)> fn);
+static void h4Chunker(T const& x,function<void(typename T::const_iterator)> fn);
 
 /*
 Takes a data structure of type T and calls f with increasing values of an iterator until the iterator == T::end();

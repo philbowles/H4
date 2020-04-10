@@ -28,7 +28,7 @@ H4_FN_COUNT	KEYWORD1
 cancel	KEYWORD2
 cancelAll	KEYWORD2
 cancelSingleton	KEYWORD2
-chunker	KEYWORD2
+h4Chunker	KEYWORD2
 createPartial	KEYWORD2
 every	KEYWORD2
 endF	KEYWORD2
