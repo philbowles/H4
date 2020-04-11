@@ -226,7 +226,6 @@ class task{
 using H4Q = priority_queue<task*, vector<task*>, task>;
 class pq: public H4Q {
 	protected:
-            task*			add(H4_FN_VOID _f,uint32_t _m,uint32_t _x,H4_FN_COUNT _r,H4_FN_VOID _c,uint32_t _u=0,bool _s=false);
             uint32_t 		gpFramed(task* t,function<uint32_t()> f);
             bool  			has(task* t){ return find(c.begin(),c.end(),t) != c.end(); }
             uint32_t		endF(task* t);
@@ -237,6 +236,8 @@ class pq: public H4Q {
             void  			qt(task* t);
             void  			reserve(size_type n){ c.reserve(n); }
             H4_FN_TASK      taskEvent=[](task*,char){};
+    public:
+            task*			add(H4_FN_VOID _f,uint32_t _m,uint32_t _x,H4_FN_COUNT _r,H4_FN_VOID _c,uint32_t _u=0,bool _s=false);
 };
 //
 //      H 4
