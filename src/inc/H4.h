@@ -147,6 +147,7 @@ using 	H4_TIMER_MAP	=std::unordered_map<uint32_t,H4_TIMER>;
 #define CSTR(x) x.c_str()
 #define ME H4::context
 #define MY(x) H4::context->x
+#define TAG(x) (u+((x)*100))
 //
 //  diag
 //
