@@ -33,7 +33,7 @@ SOFTWARE.
 #define H4_VERSION  "0.5.4"
 
 //#define H4_NO_USERLOOP      // improves performance
-//#define H4_COUNT_LOOPS true // DIAGNOSTICS
+#define H4_COUNT_LOOPS true // DIAGNOSTICS
 
 #define H4_JITTER_LO    100 // Entropy lower bound
 #define H4_JITTER_HI    350 // Entropy upper bound
@@ -264,11 +264,7 @@ class H4: public pq{
                     startup=bind([this](uint32_t baud){
                         if(baud) {
                             Serial.begin(baud);
-                            Serial.print(" H4 version ");Serial.println(H4_VERSION);
-#ifdef H4_COUNT_LOOPS
-                            Serial.println("COUNTING LOOPS");
-                            every(1000,[]{ Serial.printf("%u\n",h4Nloops); h4Nloops=0;},nullptr,13);
-#endif
+                            Serial.print("\nH4 version ");Serial.println(H4_VERSION);
                         }
                         h4StartPlugins();
                     },baud);

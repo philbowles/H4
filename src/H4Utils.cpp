@@ -29,7 +29,10 @@ SOFTWARE.
 #include <H4Utils.h>
 
 // non-member utils:
-bool isNumeric(const string& s){ return all_of(s.begin(), s.end(), ::isdigit); }
+bool isNumeric(const string& s){ 
+    string abs=(s[0]=='-') ? string(++s.begin(),s.end()):s; // allow leading minus
+    return all_of(abs.begin(), abs.end(), ::isdigit);
+}
 
 string join(const vector<string>& vs,const char* delim) {
 	string rv="";
