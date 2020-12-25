@@ -1,4 +1,4 @@
-# H4 (version 0.5.4)
+# H4 version 1.0.0
 
 ## Cross-platform functional scheduler / timer for ESP8266/32, STM32-NUCLEO, RPi and Ubuntu
 
@@ -12,7 +12,7 @@ Successfully running multiple simultaneous* tasks on most MCUs is notoriously di
 
 To make matters worse, the vast majority of examples available simple one-function feature demos written without any concept of resource sharing. Trying to combine two such examples that require co-operation but are written with none is a recipe that leads inevitably to crashes, reboots and "random" failures, often dispiritng and/or deterring the newcomer.
 
-The final "passion killer" is that very few beginners understand the difference between synchronous (a.k.a. "blocking") and asynchronous (a.k.a "non-blocking") code. Unfortunately, running simultaneous* tasks *absolutley* requires that they do. Many examples run blocking code, some don't. Mixing the two willy-nilly because you never knew you shouldn't is again the source of a large proportion of problems and questions seen in support forums.
+The final "passion killer" is that very few beginners understand the difference between synchronous (a.k.a. "blocking") and asynchronous (a.k.a "non-blocking") code. Unfortunately, running simultaneous* tasks *absolutley* requires that they do. Many common examples run blocking code, some don't. Mixing the two willy-nilly because you never knew you shouldn't is again the source of a large proportion of problems and questions seen in support forums.
 
 If - for example - you want MQTT *and* a webserver then, you are in for a lot of hard work and many failures unless you are already familiar with all of the above.
 
@@ -22,7 +22,7 @@ The Arduino core goes some way to help with the Ticker library, which is a great
 
 * It has only two methods: single-shot timer and steady repeating timer (H4 has 11)
 * It can only call bare functions, i.e. it cannot call class methods, lambdas or functional objects, which more advanced code requires.
-* Because it is run in an interrupt-like context, the "safe" work that can be done inside the timer callback is severly limited - again many "noobs" dont know this and pack it with "prohibited" code that causes problems. In other words while it *helps*, it does not (and *can* not) remove the need for detailed knowledge and experience of sync vs async programming.
+* Because it is run in an interrupt-like context, the "safe" work that can be done inside the timer callback is severly limited - again many "noobs" dont know this and pack it with "prohibited" code that causes problems. In other words while it *helps*, it does not (and *cannot*) remove the need for detailed knowledge and experience of sync vs async programming.
 
 ### H4 to the rescue
 

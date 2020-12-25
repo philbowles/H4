@@ -29,7 +29,7 @@ SOFTWARE.
 #include <H4.h>
 #include <H4Utils.h>
 
-#ifdef H4_COUNT_LOOPS
+#if H4_COUNT_LOOPS
 uint32_t h4Nloops;
 #endif
 
@@ -320,7 +320,7 @@ extern "C" {
 #ifndef H4_NO_USERLOOP
 		h4UserLoop();
 #endif
-#ifdef H4_COUNT_LOOPS
+#if H4_COUNT_LOOPS
         h4Nloops++;
 #endif
 	}
