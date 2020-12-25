@@ -262,6 +262,7 @@ finishEarly // jump to chain function after current schedule then quit
 finishNow // quit after current schedule, do not run chain function
 finishIf // "finishEarly" if user-supplied termination function (type H4_FN_TIF) returns true
 */
+void cancel(initializer_list<H4_TASK_PTR> l); // cancel multiple timers in a single call
 H4_TASK_PTR cancel(H4_TASK_PTR t = context);
 void cancelAll(H4_FN_VOID fn = nullptr);
 void cancelSingleton(uint32_t s);
