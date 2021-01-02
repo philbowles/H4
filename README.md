@@ -281,14 +281,15 @@ H4 has a number of useful functions for its own needs, but these are also availa
 ```cpp
 bool isNumeric(const string& s); // Is string a valid integer?
 string join(const vector<string>& vs,const char* delim="\n"); // flatten vector into single delimited string
+string lowercase(string); // whole string
+string ltrim(const string& s, const char d=' ');// chops off all leftmost chars matching d
 string replaceAll(const string& s,const string& f,const string& r); // replace all occurrences of f in s with r
+string rtrim(const string& s, const char d=' '); // chops off all rightmost chars matching d
 vector<string> split(const string& s, const char* delimiter="\n"); // break delimited string into vector of strings
 string stringFromInt(int i,const char* fmt="%d"); // convert integer to string using "printf" specifiers
 string stringFromBuff(const byte* data,int len); // converts typical message data of len n to string
-string uppercase(string); // whole string
-string rtrim(const string& s, const char d=' '); // chops off all rightmost chars matching d
-string ltrim(const string& s, const char d=' ');// chops off all leftmost chars matching d
 string trim(const string& s, const char d=' '); // chops of both leading and trailing chars
+string uppercase(string); // whole string
 
 ```
 

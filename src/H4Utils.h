@@ -38,6 +38,7 @@ using namespace std;
 
 bool		    isNumeric(const string& s);
 string 		    join(const vector<string>& vs,const char* delim="\n");
+string          lowercase(string);
 string          replaceAll(const string& s,const string& f,const string& r);
 vector<string>  split(const string& s, const char* delimiter="\n");
 string		    stringFromInt(int i,const char* fmt="%d");

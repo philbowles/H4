@@ -44,6 +44,7 @@ hookReboot	KEYWORD2
 h4reboot	KEYWORD2
 h4setup	KEYWORD2
 loop	KEYWORD2
+lowercase	KEYWORD2
 nTimes	KEYWORD2
 nTimesRandom	KEYWORD2
 once	KEYWORD2

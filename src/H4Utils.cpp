@@ -86,6 +86,11 @@ string stringFromInt(int i,const char* fmt){
 	return string(buf);
 }
 
+string lowercase(string s){
+   string ucase(s);
+   transform(ucase.begin(), ucase.end(),ucase.begin(), [](unsigned char c){ return std::tolower(c); } );
+   return ucase;
+}
 string uppercase(string s){
    string ucase(s);
    transform(ucase.begin(), ucase.end(),ucase.begin(), [](unsigned char c){ return std::toupper(c); } );
