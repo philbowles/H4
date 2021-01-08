@@ -33,7 +33,7 @@ SOFTWARE.
 #define H4_VERSION  "1.0.0"
 
 #define H4_NO_USERLOOP      // improves performance
-#define H4_COUNT_LOOPS 0 // DIAGNOSTICS
+#define H4_COUNT_LOOPS 0    // DIAGNOSTICS
 
 #define H4_JITTER_LO    100 // Entropy lower bound
 #define H4_JITTER_HI    350 // Entropy upper bound
@@ -47,7 +47,6 @@ SOFTWARE.
         #define H4_BOARD BOARD_NAME
     #else
         #define h4rebootCore ESP.restart
-        #define H4WF_WIFI
         #define H4_BOARD ARDUINO_BOARD
     #endif
 #elif defined __unix__
@@ -283,10 +282,10 @@ class H4: public pq{
                 H4_TASK_PTR 	repeatWhileEver(H4_FN_COUNT w, uint32_t msec, H4_FN_VOID fn = []() {}, H4_FN_VOID fnc = nullptr, uint32_t u = 0,bool s=false);
 
                 H4_TASK_PTR		cancel(H4_TASK_PTR t = context) { return endK(t); } // ? rv ?
-                void			cancel(initializer_list<H4_TASK_PTR> l){ for(auto t:l) cancel(t); }
+                void			cancel(initializer_list<H4_TASK_PTR> l){ for(auto const t:l) cancel(t); }
                 void 			cancelAll(H4_FN_VOID fn = nullptr);
                 void 			cancelSingleton(uint32_t s){ task::cancelSingleton(s); }
-                void			cancelSingleton(initializer_list<uint32_t> l){ for(auto i:l) cancelSingleton(i); }
+                void			cancelSingleton(initializer_list<uint32_t> l){ for(auto const i:l) cancelSingleton(i); }
                 uint32_t 		finishEarly(H4_TASK_PTR t = context) { return endF(t); }
                 uint32_t 		finishNow(H4_TASK_PTR t = context) { return endU(t); }
                 bool			finishIf(H4_TASK_PTR t, H4_FN_TIF f) { return endC(t, f); }

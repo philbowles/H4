@@ -81,14 +81,14 @@ H4_TIMER_MAP	    task::singles={};
 
 void H4::_runRebootChain(){
     reverse(H4::rebootChain.begin(),H4::rebootChain.end()); 
-    for(auto &c:H4::rebootChain) c();
+    for(auto const& c:H4::rebootChain) c();
     onReboot();
 }
 
 void h4reboot(){ 
     H4::_runRebootChain();
     h4rebootCore();
-}    
+}
 
 H4Random::H4Random(uint32_t rmin,uint32_t rmax){ count=task::randomRange(rmin,rmax);	}
 
@@ -316,7 +316,7 @@ extern "C" {
             (*context)();
  			context=nullptr;
 		}
-        for(auto f:loopChain) f();
+        for(auto const f:loopChain) f();
 #ifndef H4_NO_USERLOOP
 		h4UserLoop();
 #endif
