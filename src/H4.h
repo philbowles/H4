@@ -30,15 +30,16 @@ SOFTWARE.
 #ifndef H4_H
 #define H4_H
 
-#define H4_VERSION  "1.0.0"
+#define H4_VERSION  "1.0.1"
 
 #define H4_NO_USERLOOP      // improves performance
-#define H4_COUNT_LOOPS 0    // DIAGNOSTICS
+#define H4_COUNT_LOOPS    1 // DIAGNOSTICS
 
 #define H4_JITTER_LO    100 // Entropy lower bound
 #define H4_JITTER_HI    350 // Entropy upper bound
-#define H4_Q_CAPACITY	 20 // Default Q capacity
+#define H4_Q_CAPACITY	 10 // Default Q capacity
 #define H4_Q_ABS_MIN      6 // Absolute minimum Q capacity
+#define H4_CALIBRATE     25 // to count N loops
 
 #if (defined ARDUINO_ARCH_STM32 || defined ARDUINO_ARCH_ESP8266 || defined ARDUINO_ARCH_ESP32)
     #define H4_ARDUINO
@@ -57,7 +58,7 @@ SOFTWARE.
 #else // native stm32
     #define CUBEIDE
 	#include "main.h"
-    #define noInterrupts __disable_irq
+    #define HAL_disableInterrupts() __disable_irq
     #define interrupts __enable_irq
     #define h4GetTick	HAL_GetTick
 	#define millis		HAL_GetTick
@@ -253,20 +254,20 @@ class H4: public pq{
         static  vector<H4_FN_VOID> rebootChain;
         static  std::unordered_map<uint32_t,uint32_t> unloadables;
 	    static  H4_TASK_PTR		context;
-	            H4_FN_VOID		startup;
+//	            H4_FN_VOID		startup;
 
 	    	    void 		    loop();
                 void            setup();
 
                 H4(uint32_t baud=0,size_t qSize=H4_Q_CAPACITY){ 
                     reserve(qSize);
+                    if(baud) { Serial.begin(baud); }
+                    /*
                     startup=bind([this](uint32_t baud){
-                        if(baud) {
-                            Serial.begin(baud);
-//                            Serial.print("\nH4 version ");Serial.println(H4_VERSION);
-                        }
+                        if(baud) { Serial.begin(baud); }
                         h4StartPlugins();
                     },baud);
+                    */
                 }
 
                 H4_TASK_PTR 	every(uint32_t msec, H4_FN_VOID fn, H4_FN_VOID fnc = nullptr, uint32_t u = 0,bool s=false);

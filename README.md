@@ -6,29 +6,29 @@
 
 ---
 
+## Version 1.0.1
+[Release Notes](docs/rn101.md)
 ## Why do I need it?
 
-Successfully running multiple simultaneous* tasks on most MCUs is notoriously difficult. It usually requires either a ready-made RTOS (e.g. freeRTOS) or a great deal of experience of low-level C/C++ programming and an intimate knowledge of the MCU timer architecture. Both require an intimidating learning curve and most beginners have little knowledge of either.
+Successfully running multiple simultaneous* tasks on most embedded MCUs is notoriously difficult. It usually requires either a ready-made RTOS (e.g. freeRTOS) or a great deal of experience of low-level C/C++ programming and an intimate knowledge of the MCU timer architecture. Both require an intimidating learning curve and most beginners have little knowledge of either.
 
-To make matters worse, the vast majority of examples available simple one-function feature demos written without any concept of resource sharing. Trying to combine two such examples that require co-operation but are written with none is a recipe that leads inevitably to crashes, reboots and "random" failures, often dispiritng and/or deterring the newcomer.
+To make matters worse, the vast majority of examples available are simple one-function "proof of concept" demos written without any concept of resource sharing. Trying to combine two such examples that require co-operation but are written with none is a recipe that leads inevitably to crashes, reboots and "random" failures, often dispiritng and/or deterring the newcomer.
 
-The final "passion killer" is that very few beginners understand the difference between synchronous (a.k.a. "blocking") and asynchronous (a.k.a "non-blocking") code. Unfortunately, running simultaneous* tasks *absolutley* requires that they do. Many common examples run blocking code, some don't. Mixing the two willy-nilly because you never knew you shouldn't is again the source of a large proportion of problems and questions seen in support forums.
+The final "passion killer" is that very few beginners understand the difference between synchronous (a.k.a. "blocking") and asynchronous (a.k.a "non-blocking") code. Successfully running simultaneous* tasks *absolutley* requires that they do. Most common examples run blocking code, some don't. Mixing the two willy-nilly (because you never knew you shouldn't) is another source of problems and questions regulalry seen in support forums.
 
 If - for example - you want MQTT *and* a webserver then, you are in for a lot of hard work and many failures unless you are already familiar with all of the above.
 
-### Limitations of the Ticker library
+### Ticker library to the rescue? - Not quite...
 
 The Arduino core goes some way to help with the Ticker library, which is a great start and allows the user to run "background" independent timer tasks but is limited in several ways:
 
-* It has only two methods: single-shot timer and steady repeating timer (H4 has 11)
-* It can only call bare functions, i.e. it cannot call class methods, lambdas or functional objects, which more advanced code requires.
-* Because it is run in an interrupt-like context, the "safe" work that can be done inside the timer callback is severly limited - again many "noobs" dont know this and pack it with "prohibited" code that causes problems. In other words while it *helps*, it does not (and *cannot*) remove the need for detailed knowledge and experience of sync vs async programming.
+* It has only two methods: single-shot timer and steady repeating timer (H4 has 11 types)
+* It can only call bare static functions, i.e. it cannot call class methods, lambdas or functional objects, which more advanced code requires, especially in event-driven programming
+* Because it is run in an interrupt-like context, the "safe" work that can be done inside the timer callback is limited - again many "newbies" don't know this and pack it with "prohibited" code that causes problems. In other words while it *helps*, it does not (and *cannot*) remove the need for detailed knowledge and experience of sync vs async programming.
 
 ### H4 to the rescue
 
-H4 is a library that addresses all of these problems and provides a simple interface for the beginner that hides all these issues that he or she never knew they needed to know. Now they really don't. It also provides sophisticated features for the more experienced programmer to greatly reduce development time. It is - if you like - a "poor man's OS" but with minimal size and a much smaller learning curve by comparison with a full RTOS.
-
-In truth it is just a scheduler with some fancy timing functions that can call
+H4 is a library that addresses all of these problems and provides a simple interface for the beginner that hides all of these issues that the user never knew they needed to know. Now they really don't. It also provides sophisticated features for the more experienced programmer to greatly reduce development time. It is - if you like - a "poor man's OS" but with minimal size and a much smaller learning curve by comparison with a full RTOS. In truth it is just a scheduler with some fancy timing functions that can call:
 
 * "Normal" functions
 * Class methods
@@ -51,7 +51,9 @@ For more information or to download the optional H4Plugins library, go to [H4Plu
 
 H4 serialises *all* asynchronous events (buttons, sensors, timers, incoming web request, MQTT messages etc) into a synchronous queue running on "the main loop".
 
-If you don't have a clue what that means, don't worry: it is *exactly* the point of H4 - you don't need to. Without H4, you most definitely would.
+If you don't have a clue what that means, don't worry: it is *exactly* the point of H4 - you don't need to. Without H4, you most definitely would, but here's a picture anyway...
+
+![1kwords](assets/1kwords.jpg)
 
 All you need to know is that you no longer write your sketch with `setup` and `loop` functions and decide what order to do things. H4 controls all of that for you and H4 alone decides when parts of your code will run and that is only when they won't interfere of break other things that need to be done "behind the scenes".
 
@@ -69,11 +71,11 @@ In case you didn't quite "get" that:
 
   **DO NOT EVER CALL THE DELAY FUNCTION OR THE YIELD FUNCTION**
 
-If you *think* you need to, or if you think you need to call `millis` or `micros` or `delayMicroseconds` then quite simply: *you are using H4 incorrectly* and you won't get any support.
+If you *think* you need to, or if you think you need to call `millis` or `micros` or `delayMicroseconds` then quite simply: *you are using H4 incorrectly*. The only support answer you will get if you call any of those things is: ***"don't do it then"*** :)
 
 ## Callbacks and Events
 
-H4 invokes a user-defined callback when an "event" occurs. In this basic library, all of those events are caused by timers. When you use the H4Plugins library those events can also be:
+H4 invokes a user-defined callback when an "event" occurs. In this basic library, all of those events are caused by timers. When you use [H4Plugins](https://github.com/philbowles/h4plugins) those events can also be:
 
 * A GPIO pin changing state
 * An incoming web request
@@ -82,12 +84,13 @@ H4 invokes a user-defined callback when an "event" occurs. In this basic library
 * An MQTT server disconnection or reconnection
 * A "presence detection" event, e.g. a mobile device joining/leaving the network
 * An Alexa voice command
+* An absolute time or calendar event
 
 ### The callback function:
 
 Many of you will only be familiar with the first one of the options listed below: if that is the case, stick with it but try to learn about the others - they will make your life *so* much easier and allow you to write much better code. "Lambda" functions in particular are incredibly useful and something you should know about for the future. There are many examples provided to show how easy it is to use them. For now, just stick with "normal" functions.
 
-* "Normal" void function - just like any other you have ever written, with no parameters
+* "Normal" void function  with no parameters - just like any other you have ever written,
 * Lambda function
 * Class function
 * Any C++ functor with an `operator()()`
@@ -155,7 +158,7 @@ void onReboot(void); // called just prior to reboot to allow user to clean up et
 
 ### Introduction
 
-All timers return a "handle" (type `H4_TIMER` - see footnote*) which can be used to subsequently cancel the task. It can be ignored if not required.
+All timers return a "handle" (type `H4_TIMER` - see footnote*) which can be used to subsequently cancel the task. It can mostly be ignored.
 
 With one exception (`queueFunction`) all tasks start _after_ the first specified time interval and not immediately. Using the infinite task "`every(1000...`" will invoke the first instance of user callback at Tstart + 1sec (1000 mS).
 
@@ -167,7 +170,7 @@ All callbacks take an optional "chain" function (type `H4_FN_VOID`) which is cal
 
 Tasks which only "make sense" if they are unique (e.g. a system "ticker") can declare themselves on creation as a "singleton". Any existing task with the same type and ID will be cancelled and replaced by the new instance, ensuring only one copy is ever running at a time.
 
-It is important to understand that *no* task will actually start running until you exit `h4setup`, only then does H4 takes over the loop and start processing whatever it finds in the queue.
+It is important to understand that *no* task will actually ***start*** running until you exit `h4setup`: you are only declaring / defining them. Once you exit `h4setup`, H4 takes over the loop and starts processing whatever it finds in the queue.
 
 *( * footnote: or `H4_TASK_PTR` - they are identical)*
 
@@ -194,8 +197,8 @@ H4(uint32_t baud=0,size_t qSize=H4_Q_CAPACITY);
 /*
 baud = Serial output speed, e.g. 115200. If not specified, Serial will not be started, so you won't see any messages.
 qSize = maximum length of task queue. It cannot be set below 5. 
-Setting it higher thqn 20 just wastes space and slows things down. 
-Don't mess with this: 20 is plenty. Leave it alone till you know more about H4.
+Setting it higher than, say, 10 just wastes space and slows things down. 
+Don't mess with this: 5 is *usually* plenty. Leave it alone till you know more about H4.
 */
 ```
 
@@ -279,7 +282,6 @@ bool finishIf(H4_TASK_PTR t, H4_FN_TIF f);
 H4 has a number of useful functions for its own needs, but these are also available for users. They are global, so do not need to be prefixed by "h4." They all use std::string so if you don't know what that is, don't call 'em!
 
 ```cpp
-bool isNumeric(const string& s); // Is string a valid integer?
 string join(const vector<string>& vs,const char* delim="\n"); // flatten vector into single delimited string
 string lowercase(string); // whole string
 string ltrim(const string& s, const char d=' ');// chops off all leftmost chars matching d
@@ -288,6 +290,8 @@ string rtrim(const string& s, const char d=' '); // chops off all rightmost char
 vector<string> split(const string& s, const char* delimiter="\n"); // break delimited string into vector of strings
 string stringFromInt(int i,const char* fmt="%d"); // convert integer to string using "printf" specifiers
 string stringFromBuff(const byte* data,int len); // converts typical message data of len n to string
+bool stringIsAlpha(const string& s); // Is string completely alphabetic?
+bool stringIsNumeric(const string& s); // Is string a valid integer?
 string trim(const string& s, const char d=' '); // chops of both leading and trailing chars
 string uppercase(string); // whole string
 
@@ -301,7 +305,7 @@ string uppercase(string); // whole string
 
 Simply download the zip of this repository and install as an Arduino library: `Sketch/Include Library/Add .ZIP Library...`
 
-### STM32CubeIDE
+### STM32CubeIDE - D E P R E C A T E D (may no longer work)
 
 This is a little more involved and has some limitations:
 
@@ -432,6 +436,8 @@ The millisecond time between consecutive calls is randomised to spread the load 
 
 [Example Sketch](examples/advanced/chunkier/chunkier.ino)
 
+[Advanced Example Sketch](examples/chunky_maths/chunky_maths.ino)
+
 ---
 
 #### The many ways to die
@@ -475,7 +481,7 @@ void*           partial=NULL; // ptr -> Your partial results
 
 *Note 2*
 
-*`rmin` and `rmax` work together. If it's not a random task, `rmin` is functionally equivalent to the mSec parameter which controls the timer, e.g. `once(30000,...` will have `rmin` = 30000 and `rmax`=0. For randomly-timed tasks, they hold the min and max values of the randomness. In `queueFunction`, they are both zero, since it never has to wait for any time before it runs f(). There is a special case: when they are equal (but not both zero) then the "due" time is set to T=1000 x 60 x 60 x 24 or a whole day's worth of milliseconds, causing the task to be rescheduled at the exact same time tomorrow... allowing a "`daily(...`" task or an `at(clock_time...` task - which will be coming soon when the NTP H4Plugin is released.*
+*`rmin` and `rmax` work together. If it's not a random task, `rmin` is functionally equivalent to the mSec parameter which controls the timer, e.g. `once(30000,...` will have `rmin` = 30000 and `rmax`=0. For randomly-timed tasks, they hold the min and max values of the randomness. In `queueFunction`, they are both zero, since it never has to wait for any time before it runs f(). There is a special case: when they are equal (but not both zero) then the "due" time is set to T=1000 x 60 x 60 x 24 or a whole day's worth of milliseconds, causing the task to be rescheduled at the exact same time tomorrow... allowing a "`daily(...`" task or an `at(clock_time...` task* - see the [H4P_TimeKeeper plugin]((https://github.com/philbowles/h4plugins)) 
 
 *Note 3*
 
@@ -490,6 +496,7 @@ void*           partial=NULL; // ptr -> Your partial results
 [Example Sketch](examples/advanced/TheManyWaysToDie/TheManyWaysToDie.ino)
 
 ---
+
 (c) 2020 Phil Bowles h4plugins@gmail.com
 
 * [Youtube channel (instructional videos)](https://www.youtube.com/channel/UCYi-Ko76_3p9hBUtleZRY6g)

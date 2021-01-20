@@ -58,7 +58,7 @@ randomTimesRandom	KEYWORD2
 repeatWhile	KEYWORD2
 repeatWhileEver	KEYWORD2
 requeue	KEYWORD2
-isNumeric	KEYWORD2
+stringIsNumeric	KEYWORD2
 join	KEYWORD2
 replaceAll	KEYWORD2
 schedule	KEYWORD2

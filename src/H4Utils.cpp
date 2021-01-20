@@ -29,11 +29,6 @@ SOFTWARE.
 #include <H4Utils.h>
 
 // non-member utils:
-bool isNumeric(const string& s){ 
-    string abs=(s[0]=='-') ? string(++s.begin(),s.end()):s; // allow leading minus
-    return all_of(abs.begin(), abs.end(), ::isdigit);
-}
-
 string join(const vector<string>& vs,const char* delim) {
 	string rv="";
 	if(vs.size()){
@@ -84,6 +79,15 @@ string stringFromInt(int i,const char* fmt){
 	char buf[16];
 	sprintf(buf,fmt,i);
 	return string(buf);
+}
+
+bool stringIsAlpha(const string& s){ 
+    return !(std::find_if(s.begin(), s.end(),[](char c) { return !std::isalpha(c); }) != s.end());
+}
+
+bool stringIsNumeric(const string& s){ 
+    string abs=(s[0]=='-') ? string(++s.begin(),s.end()):s; // allow leading minus
+    return all_of(abs.begin(), abs.end(), ::isdigit);
 }
 
 string lowercase(string s){

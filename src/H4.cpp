@@ -59,9 +59,20 @@ uint32_t h4Nloops;
 		return ms;
 	}
 	
-	void interrupts(){}
+	void HAL_enableInterrupts(){}
 
-	void noInterrupts(){}
+	void HAL_disableInterrupts(){}
+#else
+    #ifdef ARDUINO_ARCH_ESP32
+        portMUX_TYPE my_mutex = portMUX_INITIALIZER_UNLOCKED;
+	    void HAL_enableInterrupts(){ portEXIT_CRITICAL(&my_mutex); }
+
+	    void HAL_disableInterrupts(){ portENTER_CRITICAL(&my_mutex); }
+    #else
+        void HAL_enableInterrupts(){ interrupts(); }
+
+        void HAL_disableInterrupts(){ noInterrupts();}
+    #endif
 #endif
 //
 //      and ...here we go!
@@ -102,9 +113,9 @@ task* pq::add(H4_FN_VOID _f,uint32_t _m,uint32_t _x,H4_FN_COUNT _r,H4_FN_VOID _c
 uint32_t pq::gpFramed(task* t,H4_FN_RTPTR f){
 	uint32_t rv=0;
 	if(t){
-		noInterrupts();
+		HAL_disableInterrupts();
 		if(has(t) || (t==H4::context)) rv=f(); // fix bug where context = 0!
-		interrupts();
+		HAL_enableInterrupts();
 	}
 	return rv;
 }
@@ -119,22 +130,22 @@ task* 	 pq::endK(task* t){ return reinterpret_cast<task*>(gpFramed(t,bind(&task:
 
 task* pq::next(){
 	task* t=nullptr;
-    uint32_t now=(uint32_t) h4GetTick(); // can't do inside loop...clocks dont work when noInterrupts!!!
-	noInterrupts();
+    uint32_t now=(uint32_t) h4GetTick(); // can't do inside loop...clocks dont work when HAL_disableInterrupts()!!!
+	HAL_disableInterrupts();
 	if(size()){
 	   if(((int)(top()->at -  now)) < 1) {
 		t=top();
 		pop();
 	  }
 	}
-	interrupts();
+	HAL_enableInterrupts();
 	return t;
 }
 
 void pq::qt(task* t){
-	noInterrupts();
+	HAL_disableInterrupts();
 	push(t);
-	interrupts();
+	HAL_enableInterrupts();
     taskEvent(t,'S');
 }
 //
@@ -247,9 +258,9 @@ extern  void h4setup();
 
 vector<task*> H4::_copyQ(){
     vector<task*> t;
-    noInterrupts();
+    HAL_disableInterrupts();
     t=c;
-    interrupts();
+    HAL_enableInterrupts();
     return t;
 }
 
@@ -271,8 +282,9 @@ bool H4::_unHook(uint32_t subid){
 
 #ifdef ARDUINO
         void setup(){
-            h4.startup();
+    //        h4.startup();
             h4setup();
+            h4.once(H4_CALIBRATE,h4StartPlugins); // 10ms of calibration
         }        
         
         void loop(){ h4.loop(); }
@@ -312,11 +324,11 @@ H4_TASK_PTR H4::repeatWhileEver(H4_FN_COUNT fncd,uint32_t msec,H4_FN_VOID fn,H4_
 extern "C" {
 #endif
 	void H4::loop(){
-		if(context=h4.next()){
-            (*context)();
- 			context=nullptr;
-		}
-        for(auto const f:loopChain) f();
+            if(context=h4.next()){
+                (*context)();
+                context=nullptr;
+            }
+            for(auto const f:loopChain) f();
 #ifndef H4_NO_USERLOOP
 		h4UserLoop();
 #endif

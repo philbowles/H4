@@ -27,8 +27,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef H4Utils_H
-#define H4Utils_H
+#pragma once
 
 #include<Arduino.h>
 #include<vector>
@@ -36,16 +35,15 @@ SOFTWARE.
 
 using namespace std;
 
-bool		    isNumeric(const string& s);
 string 		    join(const vector<string>& vs,const char* delim="\n");
 string          lowercase(string);
+string          ltrim(const string& s, const char d=' ');
 string          replaceAll(const string& s,const string& f,const string& r);
+string          rtrim(const string& s, const char d=' ');
 vector<string>  split(const string& s, const char* delimiter="\n");
 string		    stringFromInt(int i,const char* fmt="%d");
 string          stringFromBuff(const byte* data,int len);
-string          uppercase(string);
-string          rtrim(const string& s, const char d=' ');
-string          ltrim(const string& s, const char d=' ');
+bool		    stringIsAlpha(const string& s);
+bool		    stringIsNumeric(const string& s);
 string          trim(const string& s, const char d=' ');
-
-#endif
+string          uppercase(string);
