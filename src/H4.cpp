@@ -282,9 +282,8 @@ bool H4::_unHook(uint32_t subid){
 
 #ifdef ARDUINO
         void setup(){
-    //        h4.startup();
+            h4StartPlugins();
             h4setup();
-            h4.once(H4_CALIBRATE,h4StartPlugins); // 10ms of calibration
         }        
         
         void loop(){ h4.loop(); }
