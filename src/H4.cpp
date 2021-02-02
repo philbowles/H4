@@ -82,8 +82,6 @@ void __attribute__((weak)) h4StartPlugins(){}
 void __attribute__((weak)) h4UserLoop(){}
 void __attribute__((weak)) onReboot(){}
 
-#define H4CH_TRID_CHNK 99
-
 H4_TIMER 		    H4::context=nullptr;
 unordered_map<uint32_t,uint32_t> H4::unloadables;
 vector<H4_FN_VOID>  H4::rebootChain={};
@@ -289,6 +287,16 @@ bool H4::_unHook(uint32_t subid){
         void loop(){ h4.loop(); }
 
 #endif
+
+void H4::cancelAll(H4_FN_VOID f){
+    HAL_disableInterrupts();
+    while(!empty()){
+        top()->endK();
+        pop();
+    }
+    HAL_enableInterrupts();
+    if(f) f();
+}
 
 H4_TASK_PTR H4::every(uint32_t msec,H4_FN_VOID fn,H4_FN_VOID fnc,uint32_t u,bool s){ return add(fn,msec,0,nullptr,fnc,TAG(3),s); }
 

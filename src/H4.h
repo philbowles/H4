@@ -144,6 +144,9 @@ using   H4_FN_RTPTR     = H4_FN_COUNT;
 using   H4_INT_MAP      =std::unordered_map<uint32_t,string>;
 using 	H4_TIMER_MAP	=std::unordered_map<uint32_t,H4_TIMER>;
 //
+
+#define H4_CHUNKER_ID 99
+
 #define CSTR(x) x.c_str()
 #define ME H4::context
 #define MY(x) H4::context->x
@@ -346,19 +349,20 @@ extern UART_HandleTypeDef huart3;
 extern H4 h4;
 
 template<typename T>
-static void h4Chunker(T const& x,function<void(typename T::const_iterator)> fn){
+static void h4Chunker(T &x,function<void(typename T::iterator)> fn,uint32_t lo=H4_JITTER_LO,uint32_t hi=H4_JITTER_HI){
     H4_TIMER p=h4.repeatWhile(
         H4Countdown(x.size()),
-        task::randomRange(H4_JITTER_LO,H4_JITTER_HI), // arbitrary
-        bind([](function<void(typename T::const_iterator)> fn){ 
-            typename T::const_iterator thunk;
+        task::randomRange(lo,hi), // arbitrary
+        [=](){ 
+            typename T::iterator thunk;
             ME->getPartial(&thunk);
             fn(thunk++);
             ME->putPartial((void *)&thunk);
-            },fn),
-        nullptr,99);
-    typename T::const_iterator chunkIt=x.begin();
-    p->createPartial((void *)&chunkIt, sizeof(typename T::const_iterator));
+            yield();
+            },
+        nullptr,H4_CHUNKER_ID);
+    typename T::iterator chunkIt=x.begin();
+    p->createPartial((void *)&chunkIt, sizeof(typename T::iterator));
 }
 
 #endif // H4_H

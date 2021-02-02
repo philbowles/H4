@@ -19,7 +19,7 @@ void h4setup() {
         h4.nTimes(11,5000,[](){ // the song is "10 green bottles", but we want to include zero
             uint32_t nBottles=11 - (h4.context->nrq+1);
             Serial.print(nBottles);Serial.println(" green bottles, hangin' on a wall...");
-        },nullptr,99);
+        });
         },
     13);
 

@@ -1,13 +1,36 @@
-# H4 version 1.0.0
+# H4 version 1.0.1
 
-## Cross-platform functional scheduler / timer for ESP8266/32, STM32-NUCLEO, RPi and Ubuntu
-
-![H4 Flyer](/assets/H4flyer.jpg)
+![H4 Flyer](/assets/logo.jpg)
 
 ---
 
 ## Version 1.0.1
 [Release Notes](docs/rn101.md)
+
+An ArduinoIDE library providing timers for ESP8266 / ESP32 which can call:
+
+* Normal functions
+* Class functions
+* Lambda functions
+* Any C++ functor
+
+Think of it as "Ticker on steroids". H4 has many more options:
+
+* every
+* everyRandom
+* nTimes
+* nTimesRandom
+* once
+* onceRandom
+* queueFunction
+* randomTimes
+* randomTimesRandom
+* repeatWhile
+* repeatWhileEver
+
+These allow you to run multiple simultaneous* tasks without worrying about any other tasks or the watchdog timer.
+
+---
 ## Why do I need it?
 
 Successfully running multiple simultaneous* tasks on most embedded MCUs is notoriously difficult. It usually requires either a ready-made RTOS (e.g. freeRTOS) or a great deal of experience of low-level C/C++ programming and an intimate knowledge of the MCU timer architecture. Both require an intimidating learning curve and most beginners have little knowledge of either.
@@ -497,11 +520,8 @@ void*           partial=NULL; // ptr -> Your partial results
 
 ---
 
-(c) 2020 Phil Bowles h4plugins@gmail.com
+(c) 2021 Phil Bowles h4plugins@gmail.com
 
-* [Youtube channel (instructional videos)](https://www.youtube.com/channel/UCYi-Ko76_3p9hBUtleZRY6g)
-* [Blog](https://8266iot.blogspot.com)
-* [Facebook Esparto Support / Discussion](https://www.facebook.com/groups/esparto8266/)
 * [Facebook H4  Support / Discussion](https://www.facebook.com/groups/444344099599131/)
 * [Facebook General ESP8266 / ESP32](https://www.facebook.com/groups/2125820374390340/)
 * [Facebook ESP8266 Programming Questions](https://www.facebook.com/groups/esp8266questions/)
