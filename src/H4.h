@@ -349,7 +349,7 @@ extern UART_HandleTypeDef huart3;
 extern H4 h4;
 
 template<typename T>
-static void h4Chunker(T &x,function<void(typename T::iterator)> fn,uint32_t lo=H4_JITTER_LO,uint32_t hi=H4_JITTER_HI){
+static void h4Chunker(T &x,function<void(typename T::iterator)> fn,uint32_t lo=H4_JITTER_LO,uint32_t hi=H4_JITTER_HI,H4_FN_VOID final=nullptr){
     H4_TIMER p=h4.repeatWhile(
         H4Countdown(x.size()),
         task::randomRange(lo,hi), // arbitrary
@@ -360,7 +360,8 @@ static void h4Chunker(T &x,function<void(typename T::iterator)> fn,uint32_t lo=H
             ME->putPartial((void *)&thunk);
             yield();
             },
-        nullptr,H4_CHUNKER_ID);
+        final,
+        H4_CHUNKER_ID);
     typename T::iterator chunkIt=x.begin();
     p->createPartial((void *)&chunkIt, sizeof(typename T::iterator));
 }

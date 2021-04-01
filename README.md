@@ -1,18 +1,16 @@
-# H4 version 1.0.1
-
 ![H4 Flyer](/assets/logo.jpg)
 
 ---
 
-## Version 1.0.1
-[Release Notes](docs/rn101.md)
+## Version 2.0.0
+[Release Notes](docs/rn200.md)
 
 An ArduinoIDE library providing timers for ESP8266 / ESP32 which can call:
 
 * Normal functions
 * Class functions
 * Lambda functions
-* Any C++ functor
+* *Any* C++ "functor"
 
 Think of it as "Ticker on steroids". H4 has many more options:
 
@@ -33,20 +31,20 @@ These allow you to run multiple simultaneous* tasks without worrying about any o
 ---
 ## Why do I need it?
 
-Successfully running multiple simultaneous* tasks on most embedded MCUs is notoriously difficult. It usually requires either a ready-made RTOS (e.g. freeRTOS) or a great deal of experience of low-level C/C++ programming and an intimate knowledge of the MCU timer architecture. Both require an intimidating learning curve and most beginners have little knowledge of either.
+*Successfully* running multiple simultaneous* tasks on most embedded MCUs is notoriously difficult. It usually requires either a ready-made RTOS (e.g. freeRTOS) or a great deal of experience of low-level C/C++ programming and an intimate knowledge of the MCU timer architecture. Both require an intimidating learning curve and most beginners have little knowledge of either.
 
 To make matters worse, the vast majority of examples available are simple one-function "proof of concept" demos written without any concept of resource sharing. Trying to combine two such examples that require co-operation but are written with none is a recipe that leads inevitably to crashes, reboots and "random" failures, often dispiritng and/or deterring the newcomer.
 
-The final "passion killer" is that very few beginners understand the difference between synchronous (a.k.a. "blocking") and asynchronous (a.k.a "non-blocking") code. Successfully running simultaneous* tasks *absolutley* requires that they do. Most common examples run blocking code, some don't. Mixing the two willy-nilly (because you never knew you shouldn't) is another source of problems and questions regulalry seen in support forums.
+The final "passion killer" is that very few beginners understand the difference between synchronous (a.k.a. "blocking") and asynchronous (a.k.a "non-blocking") code. *Successfully* running simultaneous* tasks *absolutley* requires that they do. Most common examples run blocking code, some don't. Mixing the two willy-nilly (because you never knew you shouldn't) is another source of problems and questions regularly seen in support forums.
 
-If - for example - you want MQTT *and* a webserver then, you are in for a lot of hard work and many failures unless you are already familiar with all of the above.
+If - for example - you want MQTT *and* a webserver *and* some fast-changing sensors / actuators, then you are in for a lot of hard work and many failures unless you are already familiar with all of the above.
 
 ### Ticker library to the rescue? - Not quite...
 
 The Arduino core goes some way to help with the Ticker library, which is a great start and allows the user to run "background" independent timer tasks but is limited in several ways:
 
 * It has only two methods: single-shot timer and steady repeating timer (H4 has 11 types)
-* It can only call bare static functions, i.e. it cannot call class methods, lambdas or functional objects, which more advanced code requires, especially in event-driven programming
+* It can only call "normal" bare static functions, i.e. it cannot call class methods, lambdas or functional objects, which more advanced code requires, especially in event-driven programming.
 * Because it is run in an interrupt-like context, the "safe" work that can be done inside the timer callback is limited - again many "newbies" don't know this and pack it with "prohibited" code that causes problems. In other words while it *helps*, it does not (and *cannot*) remove the need for detailed knowledge and experience of sync vs async programming.
 
 ### H4 to the rescue
@@ -58,11 +56,11 @@ H4 is a library that addresses all of these problems and provides a simple inter
 * Lambdas
 * Functional objects
 
-... but it is the difference between weeks of frustration and a few short hours of joy when developing a new project. It has the added benefit of allowing you to recompile your code unchanged on other platforms, e.g. STM32-NUCLEO, Raspberry Pi and many flavours of linux.
+... but it is the difference between weeks of frustration and a few short hours of joy when developing a new project.
 
 ### ...and more: the "Plugin" system
 
-H4 is the foundation that allows for the simple addition of modules (or "plugins") to handle WiFi, MQTT, Webserver, GPIO handling and pretty much anything else you'd ever want to do with your MCU / IOT "Thing".
+H4 is the foundation that allows for the simple addition of modules (or "plugins") which leverage the safe, "synchronous event loop" model to handle WiFi, MQTT, Webserver, NTP, GPIO handling and pretty much anything else you'd ever want to do with your MCU / IOT "Thing".
 
 For more information or to download the optional H4Plugins library, go to [H4Plugins](https://github.com/philbowles/h4plugins)
 
@@ -72,7 +70,7 @@ For more information or to download the optional H4Plugins library, go to [H4Plu
 
 ## Diving in deeper
 
-H4 serialises *all* asynchronous events (buttons, sensors, timers, incoming web request, MQTT messages etc) into a synchronous queue running on "the main loop".
+H4 allows serialisation of asynchronous events into a synchronous event queue running "on the main loop". On its own, these are generated by its own timer functions, but when using the  [H4Plugins](https://github.com/philbowles/h4plugins) system, *all* events e.g. buttons, sensors, timers, incoming web request, MQTT messages are sent to the queue.
 
 If you don't have a clue what that means, don't worry: it is *exactly* the point of H4 - you don't need to. Without H4, you most definitely would, but here's a picture anyway...
 
@@ -80,7 +78,7 @@ If you don't have a clue what that means, don't worry: it is *exactly* the point
 
 All you need to know is that you no longer write your sketch with `setup` and `loop` functions and decide what order to do things. H4 controls all of that for you and H4 alone decides when parts of your code will run and that is only when they won't interfere of break other things that need to be done "behind the scenes".
 
-Those parts of your code are known as "callback functions" or more simply "callbacks". You define what happens inside the callback and H4 decides when to run it.
+Those parts of your code are known as "callback functions" or more simply "callbacks". You define *what* happens inside the callback and H4 decides *when* to run it.
 
 Your sketch will simply be a series of short callback functions that do what you need to do and a function `h4setup` where you tell H4 about what type of external events you want to manage and which of your callback functions should be called when one of those events occurs.
 
@@ -94,7 +92,7 @@ In case you didn't quite "get" that:
 
   **DO NOT EVER CALL THE DELAY FUNCTION OR THE YIELD FUNCTION**
 
-If you *think* you need to, or if you think you need to call `millis` or `micros` or `delayMicroseconds` then quite simply: *you are using H4 incorrectly*. The only support answer you will get if you call any of those things is: ***"don't do it then"*** :)
+If you *think* you need to, or if you think you need to call `millis` or `micros` or `delayMicroseconds` then quite simply: *you are using H4 incorrectly* and not "thinking async". The only support answer you will get if you call any of those things is: ***"don't do it then"*** :)
 
 ## Callbacks and Events
 
@@ -328,66 +326,6 @@ string uppercase(string); // whole string
 
 Simply download the zip of this repository and install as an Arduino library: `Sketch/Include Library/Add .ZIP Library...`
 
-### STM32CubeIDE - D E P R E C A T E D (may no longer work)
-
-This is a little more involved and has some limitations:
-
-#### Serial Limitations
-
-**H4** includes a heavily-modified port of the Arduino Serial class to enable a "straight lift" of Arduino code that includes `Serial.printX` statments. (these are also used by the diagnostic routine `h4.dumpQ()` which will probably be removed in a later release or at least made `#define`-able).
-
-The port is write-only: printing is supported, but no reading or checking if available() etc. On the plus side, printing includes support for formatted output (via `printf`) and `std::string`
-
-1. It is hobbled by a cheap-and-cheesy hardcoded reliance on USART3 until I work out a fancy automatic method.
-2. The `begin(baud_rate);` method is a stub which does nothing, the speed used is that set by the HW configuration in CubeMX. It is included to allow "straight lift" but need not be called. /* TODO: fix this! */
-
-#### Timing limitation
-
-**H4** Is predicated upon `HAL_GetTick()` returning milliseconds. Any other timing strategy will break it.
-
-#### Installation steps
-
-1. Generate you project as a C++ project, selecting USART3 (*see above)
-2. Rename main.c to .cpp
-3. Download and unzip this repository
-4. Import H4.cpp, Print.cpp into <project>/Core/Src
-5. Import H4.h, Print.h into <project>/Core/Inc
-6. In main.cpp add the following lines to the relevant "safe" code blocks:
-
-```cpp
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
-#include "H4.h"
-/* USER CODE END Includes */
-
-...
-
-/* USER CODE BEGIN PV */
-H4 h4(115200,25); // define inital Q size: H4 h4; defaults to 20
-/* USER CODE END PV */
-
-...
-
-/* USER CODE BEGIN 2 */
-// put all your H4 setup code here, e.g. :
-// NB the Arduino millis() function is mapped to HAL_GetTick()
-Serial.print("H4 running natively on STM32F429ZI\n");
-h4.every(1000,[]{
-    Serial.print(millis());Serial.println(" PING ");
-});
-/* USER CODE END 2 */
-
-...
-/* Infinite loop */
-/* USER CODE BEGIN WHILE */
-while (1)
-{
-/* USER CODE END WHILE */
-h4.loop();
-/* USER CODE BEGIN 3 */
-}
-/* USER CODE END 3 */
-```
 
 ---
 
