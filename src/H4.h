@@ -30,7 +30,7 @@ SOFTWARE.
 #ifndef H4_H
 #define H4_H
 
-#define H4_VERSION  "1.0.1"
+#define H4_VERSION  "2.0.0"
 
 #define H4_NO_USERLOOP      // improves performance
 #define H4_COUNT_LOOPS    1 // DIAGNOSTICS
@@ -39,7 +39,6 @@ SOFTWARE.
 #define H4_JITTER_HI    350 // Entropy upper bound
 #define H4_Q_CAPACITY	 10 // Default Q capacity
 #define H4_Q_ABS_MIN      6 // Absolute minimum Q capacity
-#define H4_CALIBRATE     25 // to count N loops
 
 #if (defined ARDUINO_ARCH_STM32 || defined ARDUINO_ARCH_ESP8266 || defined ARDUINO_ARCH_ESP32)
     #define H4_ARDUINO
@@ -265,12 +264,6 @@ class H4: public pq{
                 H4(uint32_t baud=0,size_t qSize=H4_Q_CAPACITY){ 
                     reserve(qSize);
                     if(baud) { Serial.begin(baud); }
-                    /*
-                    startup=bind([this](uint32_t baud){
-                        if(baud) { Serial.begin(baud); }
-                        h4StartPlugins();
-                    },baud);
-                    */
                 }
 
                 H4_TASK_PTR 	every(uint32_t msec, H4_FN_VOID fn, H4_FN_VOID fnc = nullptr, uint32_t u = 0,bool s=false);
