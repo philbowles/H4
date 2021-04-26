@@ -2,8 +2,9 @@
 
 ---
 
-## Version 2.0.0
-[Release Notes](docs/rn200.md)
+## Version 3.0.0
+
+[Release Notes](docs/rn300.md)
 
 An ArduinoIDE library providing timers for ESP8266 / ESP32 which can call:
 
@@ -294,28 +295,6 @@ void cancelSingleton(initializer_list<uint32_t> l);
 uint32_t finishEarly(H4_TASK_PTR t = context);
 uint32_t finishNow(H4_TASK_PTR t = context);
 bool finishIf(H4_TASK_PTR t, H4_FN_TIF f);
-```
-
----
-
-### Utility functions
-
-H4 has a number of useful functions for its own needs, but these are also available for users. They are global, so do not need to be prefixed by "h4." They all use std::string so if you don't know what that is, don't call 'em!
-
-```cpp
-string join(const vector<string>& vs,const char* delim="\n"); // flatten vector into single delimited string
-string lowercase(string); // whole string
-string ltrim(const string& s, const char d=' ');// chops off all leftmost chars matching d
-string replaceAll(const string& s,const string& f,const string& r); // replace all occurrences of f in s with r
-string rtrim(const string& s, const char d=' '); // chops off all rightmost chars matching d
-vector<string> split(const string& s, const char* delimiter="\n"); // break delimited string into vector of strings
-string stringFromInt(int i,const char* fmt="%d"); // convert integer to string using "printf" specifiers
-string stringFromBuff(const byte* data,int len); // converts typical message data of len n to string
-bool stringIsAlpha(const string& s); // Is string completely alphabetic?
-bool stringIsNumeric(const string& s); // Is string a valid integer?
-string trim(const string& s, const char d=' '); // chops of both leading and trailing chars
-string uppercase(string); // whole string
-
 ```
 
 ---

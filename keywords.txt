@@ -44,7 +44,6 @@ hookReboot	KEYWORD2
 h4reboot	KEYWORD2
 h4setup	KEYWORD2
 loop	KEYWORD2
-lowercase	KEYWORD2
 nTimes	KEYWORD2
 nTimesRandom	KEYWORD2
 once	KEYWORD2
@@ -58,19 +57,8 @@ randomTimesRandom	KEYWORD2
 repeatWhile	KEYWORD2
 repeatWhileEver	KEYWORD2
 requeue	KEYWORD2
-stringIsNumeric	KEYWORD2
-join	KEYWORD2
-replaceAll	KEYWORD2
 schedule	KEYWORD2
-split	KEYWORD2
-stringFromInt	KEYWORD2
-stringFromBuff	KEYWORD2
-uppercase	KEYWORD2
-rtrim	KEYWORD2
-ltrim	KEYWORD2
-trim	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
 #######################################
-
