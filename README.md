@@ -2,9 +2,9 @@
 
 ---
 
-## Version 3.0.0
+## Version 3.0.1
 
-[Release Notes](docs/rn300.md)
+[Release Notes 3.0.1](docs/rn301.md)
 
 An ArduinoIDE library providing timers for ESP8266 / ESP32 which can call:
 

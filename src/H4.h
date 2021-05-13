@@ -40,84 +40,10 @@ SOFTWARE.
 #define H4_Q_CAPACITY	 10 // Default Q capacity
 #define H4_Q_ABS_MIN      6 // Absolute minimum Q capacity
 
-#if (defined ARDUINO_ARCH_STM32 || defined ARDUINO_ARCH_ESP8266 || defined ARDUINO_ARCH_ESP32)
-    #define H4_ARDUINO
-    #if(defined ARDUINO_ARCH_STM32)
-        #define h4rebootCore NVIC_SystemReset
-        #define H4_BOARD BOARD_NAME
-    #else
-        #define h4rebootCore ESP.restart
-        #define H4_BOARD ARDUINO_BOARD
-    #endif
-#elif defined __unix__
-    unsigned long h4GetTick();
-    #define millis	h4GetTick
-    #include<chrono>
-    #define h4rebootCore (*(void*) 0)()
-#else // native stm32
-    #define CUBEIDE
-	#include "main.h"
-    #define HAL_disableInterrupts() __disable_irq
-    #define interrupts __enable_irq
-    #define h4GetTick	HAL_GetTick
-	#define millis		HAL_GetTick
-    #define h4rebootCore NVIC_SystemReset
-#endif
+#include <Arduino.h>
 
-#if defined H4_ARDUINO
- 	#include <Arduino.h>
-	#define h4GetTick	millis
-#else
-    #include <memory.h>
-    #include<stdio.h>
-    #include<string.h>
-    #include<unistd.h>
-	#include "Print.h"
-	#include<cstdarg>
-	#include<string>
-	extern "C" {
-		int _write(int file, char *data, int len);
-	}
-	class delegateSerial: public Print{
-		public:
-			delegateSerial(){}
-
-			void begin(uint32_t){}
-
-			size_t write(uint8_t c){
-
-				return _write(1,(char*) &c,1); // 1 is irrlevant
-			}
-
-			size_t write(const char *str)
-			{
-			  if (str == NULL) return 0;
-			  return _write(1,(char*)str, strlen(str)); // 1 is irrelevant
-			}
-
-			size_t write(const uint8_t *buffer, size_t size)
-			{
-			  size_t n = 0;
-			  while (size--) {
-				if (write(*buffer++)) {
-				  n++;
-				} else {
-				  break;
-				}
-			  }
-			  return n;
-			}
-
-			size_t  printf(const char* fmt,...){
-				va_list arg;
-				va_start(arg, fmt);
-				size_t rv=vprintf(fmt, arg);
-				va_end(arg);
-				return rv;
-			}
-	};
-	extern delegateSerial Serial;
-#endif
+#define h4rebootCore ESP.restart
+#define H4_BOARD ARDUINO_BOARD
 
 void h4reboot();
 
@@ -143,18 +69,12 @@ using   H4_FN_RTPTR     = H4_FN_COUNT;
 using   H4_INT_MAP      =std::unordered_map<uint32_t,string>;
 using 	H4_TIMER_MAP	=std::unordered_map<uint32_t,H4_TIMER>;
 //
-
 #define H4_CHUNKER_ID 99
 
 #define CSTR(x) x.c_str()
 #define ME H4::context
 #define MY(x) H4::context->x
 #define TAG(x) (u+((x)*100))
-//
-//  diag
-//
-#define dumpvs(s) for(auto const& v:s) Serial.printf("VS:%s\n",CSTR(v))
-#define dumpvi(i) for(auto const& v:i) Serial.printf("VI:%u\n",v)
 
 class H4Countdown {
 	public:
@@ -253,7 +173,7 @@ class H4: public pq{
 	friend class task;
                 vector<H4_FN_VOID> loopChain;
     public:       
-        static  vector<H4_FN_VOID> rebootChain;
+//        static  vector<H4_FN_VOID> rebootChain;
         static  std::unordered_map<uint32_t,uint32_t> unloadables;
 	    static  H4_TASK_PTR		context;
 //	            H4_FN_VOID		startup;
@@ -287,13 +207,13 @@ class H4: public pq{
                 uint32_t 		finishNow(H4_TASK_PTR t = context) { return endU(t); }
                 bool			finishIf(H4_TASK_PTR t, H4_FN_TIF f) { return endC(t, f); }
 //
-                void            hookReboot(H4_FN_VOID f){ rebootChain.push_back(f); } 
+//                void            hookReboot(H4_FN_VOID f){ rebootChain.push_back(f); } 
 //              syscall only
                 size_t          _capacity(){ return c.capacity(); } 
                 vector<task*>   _copyQ();
                 void            _hookEvent(H4_FN_TASK f){ taskEvent=f; }     
                 void            _hookLoop(H4_FN_VOID f,uint32_t subid);
-        static  void            _runRebootChain();
+//        static  void            _runRebootChain();
                 bool            _unHook(uint32_t token);
 };
 

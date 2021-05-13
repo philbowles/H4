@@ -32,36 +32,7 @@ SOFTWARE.
 uint32_t h4Nloops;
 #endif
 
-#ifndef ARDUINO
-	delegateSerial Serial;
-	extern "C" {	
-		int _write(int file, char *data, int len) {
-			#ifdef CUBEIDE
-			   HAL_StatusTypeDef status = HAL_UART_Transmit(&huart3, (uint8_t*)data, len,  0xFFFF);
-			   return (status == HAL_OK ? len : 0);
-			#else
-				return write(1,data,len);
-			#endif
-		}
-	}
-#endif
 
-#ifdef __unix__
-	
-	void nop(){}
-	
-	unsigned long h4GetTick(){
-		using namespace std::chrono;
-		long ms=duration_cast<milliseconds>( 
-			time_point_cast<milliseconds>(
-			steady_clock::now()).time_since_epoch()).count();
-		return ms;
-	}
-	
-	void HAL_enableInterrupts(){}
-
-	void HAL_disableInterrupts(){}
-#else
     #ifdef ARDUINO_ARCH_ESP32
         portMUX_TYPE my_mutex = portMUX_INITIALIZER_UNLOCKED;
 	    void HAL_enableInterrupts(){ portEXIT_CRITICAL(&my_mutex); }
@@ -72,7 +43,6 @@ uint32_t h4Nloops;
 
         void HAL_disableInterrupts(){ noInterrupts();}
     #endif
-#endif
 //
 //      and ...here we go!
 //
@@ -83,18 +53,18 @@ void __attribute__((weak)) onReboot(){}
 
 H4_TIMER 		    H4::context=nullptr;
 unordered_map<uint32_t,uint32_t> H4::unloadables;
-vector<H4_FN_VOID>  H4::rebootChain={};
+//vector<H4_FN_VOID>  H4::rebootChain={};
 
 H4_TIMER_MAP	    task::singles={};
-
+/*
 void H4::_runRebootChain(){
     reverse(H4::rebootChain.begin(),H4::rebootChain.end()); 
     for(auto const& c:H4::rebootChain) c();
     onReboot();
 }
-
+*/
 void h4reboot(){ 
-    H4::_runRebootChain();
+//    H4::_runRebootChain();
     h4rebootCore();
 }
 
@@ -127,7 +97,7 @@ task* 	 pq::endK(task* t){ return reinterpret_cast<task*>(gpFramed(t,bind(&task:
 
 task* pq::next(){
 	task* t=nullptr;
-    uint32_t now=(uint32_t) h4GetTick(); // can't do inside loop...clocks dont work when HAL_disableInterrupts()!!!
+    uint32_t now=(uint32_t) millis(); // can't do inside loop...clocks dont work when HAL_disableInterrupts()!!!
 	HAL_disableInterrupts();
 	if(size()){
 	   if(((int)(top()->at -  now)) < 1) {
@@ -241,7 +211,7 @@ void task::requeue(){
 	h4.qt(this);
 }
 
-void task::schedule(){ at=(uint32_t) h4GetTick() + randomRange(rmin,rmax); }
+void task::schedule(){ at=(uint32_t) millis() + randomRange(rmin,rmax); }
 
 void task::createPartial(void* d,size_t l){
 	partial=malloc(l);
