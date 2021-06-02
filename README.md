@@ -6,7 +6,7 @@
 
 [Release Notes 3.0.1](docs/rn301.md)
 
-An ArduinoIDE library providing timers for ESP8266 / ESP32 which can call:
+Functional scheduler in the form of an ArduinoIDE library providing timers for ESP8266 / ESP32 which can call:
 
 * Normal functions
 * Class functions
@@ -29,7 +29,14 @@ Think of it as "Ticker on steroids". H4 has many more options:
 
 These allow you to run multiple simultaneous* tasks without worrying about any other tasks or the watchdog timer.
 
+The following youtube videos may prove helpful:
+
+* [Version 3 taster](https://www.youtube.com/watch?v=4ySOh0ukyrc)
+* [Why you need it](https://www.youtube.com/watch?v=OvOz3QPGoY0)
+* [Fundamentals of multitasking](https://www.youtube.com/watch?v=iUuqJJwOmvg&t=11s)
+    
 ---
+
 ## Why do I need it?
 
 *Successfully* running multiple simultaneous* tasks on most embedded MCUs is notoriously difficult. It usually requires either a ready-made RTOS (e.g. freeRTOS) or a great deal of experience of low-level C/C++ programming and an intimate knowledge of the MCU timer architecture. Both require an intimidating learning curve and most beginners have little knowledge of either.
@@ -439,9 +446,9 @@ void*           partial=NULL; // ptr -> Your partial results
 
 (c) 2021 Phil Bowles h4plugins@gmail.com
 
+* [Youtube channel (instructional videos)](https://www.youtube.com/channel/UCYi-Ko76_3p9hBUtleZRY6g)
 * [Facebook H4  Support / Discussion](https://www.facebook.com/groups/444344099599131/)
 * [Facebook General ESP8266 / ESP32](https://www.facebook.com/groups/2125820374390340/)
 * [Facebook ESP8266 Programming Questions](https://www.facebook.com/groups/esp8266questions/)
-* [Facebook IOT with ESP8266 (moderator)}](https://www.facebook.com/groups/1591467384241011/)
 * [Facebook ESP Developers (moderator)](https://www.facebook.com/groups/ESP8266/)
 * [Support me on Patreon](https://patreon.com/esparto)
