@@ -52,23 +52,12 @@ void __attribute__((weak)) h4UserLoop(){}
 void __attribute__((weak)) onReboot(){}
 
 H4_TIMER 		    H4::context=nullptr;
-unordered_map<uint32_t,uint32_t> H4::unloadables;
-//vector<H4_FN_VOID>  H4::rebootChain={};
+std::unordered_map<uint32_t,uint32_t> H4::unloadables;
 
 H4_TIMER_MAP	    task::singles={};
-/*
-void H4::_runRebootChain(){
-    reverse(H4::rebootChain.begin(),H4::rebootChain.end()); 
-    for(auto const& c:H4::rebootChain) c();
-    onReboot();
-}
-*/
-void h4reboot(){ 
-//    H4::_runRebootChain();
-    h4rebootCore();
-}
+void h4reboot(){ h4rebootCore(); }
 
-H4Random::H4Random(uint32_t rmin,uint32_t rmax){ count=task::randomRange(rmin,rmax);	}
+H4Random::H4Random(uint32_t rmin,uint32_t rmax){ count=task::randomRange(rmin,rmax); }
 
 task* pq::add(H4_FN_VOID _f,uint32_t _m,uint32_t _x,H4_FN_COUNT _r,H4_FN_VOID _c,uint32_t _u,bool _s){
 	task* t=new task(_f,_m,_x,_r,_c,_u,_s);
@@ -87,13 +76,13 @@ uint32_t pq::gpFramed(task* t,H4_FN_RTPTR f){
 	return rv;
 }
 
-uint32_t pq::endF(task* t){ return gpFramed(t,bind(&task::endF,t)); }
+uint32_t pq::endF(task* t){ return gpFramed(t,std::bind(&task::endF,t)); }
 
-uint32_t pq::endU(task* t){	return gpFramed(t,bind(&task::endU,t)); }
+uint32_t pq::endU(task* t){	return gpFramed(t,std::bind(&task::endU,t)); }
 
-bool 	 pq::endC(task* t,H4_FN_TIF f){ return static_cast<bool>(gpFramed(t,bind(&task::endC,t,f))); }
+bool 	 pq::endC(task* t,H4_FN_TIF f){ return static_cast<bool>(gpFramed(t,std::bind(&task::endC,t,f))); }
 
-task* 	 pq::endK(task* t){ return reinterpret_cast<task*>(gpFramed(t,bind(&task::endK,t))); }
+task* 	 pq::endK(task* t){ return reinterpret_cast<task*>(gpFramed(t,std::bind(&task::endK,t))); }
 
 task* pq::next(){
 	task* t=nullptr;
@@ -223,8 +212,8 @@ void task::createPartial(void* d,size_t l){
 //
 extern  void h4setup();
 
-vector<task*> H4::_copyQ(){
-    vector<task*> t;
+std::vector<task*> H4::_copyQ(){
+    std::vector<task*> t;
     HAL_disableInterrupts();
     t=c;
     HAL_enableInterrupts();
@@ -289,7 +278,7 @@ H4_TASK_PTR H4::repeatWhile(H4_FN_COUNT fncd,uint32_t msec,H4_FN_VOID fn,H4_FN_V
 
 H4_TASK_PTR H4::repeatWhileEver(H4_FN_COUNT fncd,uint32_t msec,H4_FN_VOID fn,H4_FN_VOID fnc,uint32_t u,bool s){
   return add(fn,msec,0,fncd,
-				bind([this](H4_FN_COUNT fncd,uint32_t msec,H4_FN_VOID fn,H4_FN_VOID fnc,uint32_t u,bool s){
+				std::bind([this](H4_FN_COUNT fncd,uint32_t msec,H4_FN_VOID fn,H4_FN_VOID fnc,uint32_t u,bool s){
 					fnc();
 					repeatWhileEver(fncd,msec,fn,fnc,u,s);
 				},fncd,msec,fn,fnc,u,s),

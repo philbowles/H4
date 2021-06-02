@@ -54,19 +54,19 @@ void h4reboot();
 #include<algorithm>
 #include<functional>
 
-using namespace std;
+//using namespace std;
 
 class   task;
 using	H4_TASK_PTR		=task*;
 using	H4_TIMER		=H4_TASK_PTR;
 
-using	H4_FN_COUNT		=function<uint32_t(void)>;
-using	H4_FN_TASK		=function<void(H4_TASK_PTR,char)>;
-using	H4_FN_TIF		=function<bool(H4_TASK_PTR)>;
-using	H4_FN_VOID		=function<void(void)>;
+using	H4_FN_COUNT		=std::function<uint32_t(void)>;
+using	H4_FN_TASK		=std::function<void(H4_TASK_PTR,char)>;
+using	H4_FN_TIF		=std::function<bool(H4_TASK_PTR)>;
+using	H4_FN_VOID		=std::function<void(void)>;
 using   H4_FN_RTPTR     = H4_FN_COUNT;
 //
-using   H4_INT_MAP      =std::unordered_map<uint32_t,string>;
+using   H4_INT_MAP      =std::unordered_map<uint32_t,std::string>;
 using 	H4_TIMER_MAP	=std::unordered_map<uint32_t,H4_TIMER>;
 //
 #define H4_CHUNKER_ID 99
@@ -145,10 +145,10 @@ class task{
 //
 //		P R I O R I T Y   Q U E U E (has to be after task)
 //
-using H4Q = priority_queue<task*, vector<task*>, task>;
+using H4Q = std::priority_queue<task*, std::vector<task*>, task>;
 class pq: public H4Q {
 	protected:
-            uint32_t 		gpFramed(task* t,function<uint32_t()> f);
+            uint32_t 		gpFramed(task* t,std::function<uint32_t()> f);
             bool  			has(task* t){ return find(c.begin(),c.end(),t) != c.end(); }
             uint32_t		endF(task* t);
             uint32_t		endU(task* t);
@@ -156,7 +156,7 @@ class pq: public H4Q {
             task*  			endK(task* t);
             task* 			next();
             void  			qt(task* t);
-            void  			reserve(size_type n){ c.reserve(n); }
+            void  			reserve(size_t n){ c.reserve(n); }
             H4_FN_TASK      taskEvent=[](task*,char){};
     public:
             task*			add(H4_FN_VOID _f,uint32_t _m,uint32_t _x,H4_FN_COUNT _r,H4_FN_VOID _c,uint32_t _u=0,bool _s=false);
@@ -171,12 +171,10 @@ extern void h4StartPlugins();
 
 class H4: public pq{
 	friend class task;
-                vector<H4_FN_VOID> loopChain;
+                std::vector<H4_FN_VOID> loopChain;
     public:       
-//        static  vector<H4_FN_VOID> rebootChain;
         static  std::unordered_map<uint32_t,uint32_t> unloadables;
 	    static  H4_TASK_PTR		context;
-//	            H4_FN_VOID		startup;
 
 	    	    void 		    loop();
                 void            setup();
@@ -199,21 +197,18 @@ class H4: public pq{
                 H4_TASK_PTR 	repeatWhileEver(H4_FN_COUNT w, uint32_t msec, H4_FN_VOID fn = []() {}, H4_FN_VOID fnc = nullptr, uint32_t u = 0,bool s=false);
 
                 H4_TASK_PTR		cancel(H4_TASK_PTR t = context) { return endK(t); } // ? rv ?
-                void			cancel(initializer_list<H4_TASK_PTR> l){ for(auto const t:l) cancel(t); }
+                void			cancel(std::initializer_list<H4_TASK_PTR> l){ for(auto const t:l) cancel(t); }
                 void 			cancelAll(H4_FN_VOID fn = nullptr);
                 void 			cancelSingleton(uint32_t s){ task::cancelSingleton(s); }
-                void			cancelSingleton(initializer_list<uint32_t> l){ for(auto const i:l) cancelSingleton(i); }
+                void			cancelSingleton(std::initializer_list<uint32_t> l){ for(auto const i:l) cancelSingleton(i); }
                 uint32_t 		finishEarly(H4_TASK_PTR t = context) { return endF(t); }
                 uint32_t 		finishNow(H4_TASK_PTR t = context) { return endU(t); }
                 bool			finishIf(H4_TASK_PTR t, H4_FN_TIF f) { return endC(t, f); }
-//
-//                void            hookReboot(H4_FN_VOID f){ rebootChain.push_back(f); } 
 //              syscall only
                 size_t          _capacity(){ return c.capacity(); } 
-                vector<task*>   _copyQ();
+                std::vector<task*>   _copyQ();
                 void            _hookEvent(H4_FN_TASK f){ taskEvent=f; }     
                 void            _hookLoop(H4_FN_VOID f,uint32_t subid);
-//        static  void            _runRebootChain();
                 bool            _unHook(uint32_t token);
 };
 
@@ -262,7 +257,7 @@ extern UART_HandleTypeDef huart3;
 extern H4 h4;
 
 template<typename T>
-static void h4Chunker(T &x,function<void(typename T::iterator)> fn,uint32_t lo=H4_JITTER_LO,uint32_t hi=H4_JITTER_HI,H4_FN_VOID final=nullptr){
+static void h4Chunker(T &x,std::function<void(typename T::iterator)> fn,uint32_t lo=H4_JITTER_LO,uint32_t hi=H4_JITTER_HI,H4_FN_VOID final=nullptr){
     H4_TIMER p=h4.repeatWhile(
         H4Countdown(x.size()),
         task::randomRange(lo,hi), // arbitrary
