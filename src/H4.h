@@ -30,7 +30,7 @@ SOFTWARE.
 #ifndef H4_H
 #define H4_H
 
-#define H4_VERSION  "3.0.0"
+#define H4_VERSION  "3.0.1"
 
 #define H4_NO_USERLOOP      // improves performance
 #define H4_COUNT_LOOPS    1 // DIAGNOSTICS
@@ -212,8 +212,8 @@ class H4: public pq{
                 bool            _unHook(uint32_t token);
 };
 
-#define ME H4::context
-#define MY(x) ((ME)->x)
+//#define ME H4::context
+//#define MY(x) ((ME)->x)
 //
 //  pr = partial results: a struct (or simple int) that is persisted across task schedules
 //
