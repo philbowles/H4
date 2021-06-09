@@ -33,7 +33,7 @@ SOFTWARE.
 #define H4_VERSION  "3.0.1"
 
 #define H4_NO_USERLOOP      // improves performance
-#define H4_COUNT_LOOPS    1 // DIAGNOSTICS
+#define H4_COUNT_LOOPS    0 // DIAGNOSTICS
 
 #define H4_JITTER_LO    100 // Entropy lower bound
 #define H4_JITTER_HI    350 // Entropy upper bound
@@ -53,8 +53,6 @@ void h4reboot();
 #include<queue>
 #include<algorithm>
 #include<functional>
-
-//using namespace std;
 
 class   task;
 using	H4_TASK_PTR		=task*;
@@ -212,11 +210,6 @@ class H4: public pq{
                 bool            _unHook(uint32_t token);
 };
 
-//#define ME H4::context
-//#define MY(x) ((ME)->x)
-//
-//  pr = partial results: a struct (or simple int) that is persisted across task schedules
-//
 template<typename T>
 class pr{
         size_t   size=sizeof(T);

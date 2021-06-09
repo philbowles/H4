@@ -33,8 +33,9 @@ The following youtube videos may prove helpful:
 
 * [Version 3 taster](https://www.youtube.com/watch?v=4ySOh0ukyrc)
 * [Why you need it](https://www.youtube.com/watch?v=OvOz3QPGoY0)
-* [Fundamentals of multitasking](https://www.youtube.com/watch?v=iUuqJJwOmvg&t=11s)
-    
+* [Fundamentals of multitasking](https://www.youtube.com/watch?v=iUuqJJwOmvg)
+* [How to "chain" timers](https://youtu.be/flGNBtF72Ng)
+
 ---
 
 ## Why do I need it?
