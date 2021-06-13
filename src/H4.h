@@ -66,13 +66,14 @@ using   H4_FN_RTPTR     = H4_FN_COUNT;
 using   H4_INT_MAP      =std::unordered_map<uint32_t,std::string>;
 using 	H4_TIMER_MAP	=std::unordered_map<uint32_t,H4_TIMER>;
 //
-#define H4_CHUNKER_ID 99
-
+using H4_FN_SEQ     = std::function<H4_TIMER(void)>;
+using H4_SEQ_LIST   = std::vector<H4_FN_SEQ>;
+//
 #define CSTR(x) x.c_str()
 #define ME H4::context
 #define MY(x) H4::context->x
 #define TAG(x) (u+((x)*100))
-
+#define H4_ADDSEQUENCE(c,f) c.push_back([]{ return f });
 class H4Countdown {
 	public:
 		uint32_t 	count;
@@ -193,6 +194,7 @@ class H4: public pq{
                 H4_TASK_PTR 	randomTimesRandom(uint32_t tmin, uint32_t tmax, uint32_t msec, uint32_t Rmax, H4_FN_VOID fn, H4_FN_VOID fnc = nullptr, uint32_t u = 0,bool s=false);
                 H4_TASK_PTR 	repeatWhile(H4_FN_COUNT w, uint32_t msec, H4_FN_VOID fn = []() {}, H4_FN_VOID fnc = nullptr, uint32_t u = 0,bool s=false);
                 H4_TASK_PTR 	repeatWhileEver(H4_FN_COUNT w, uint32_t msec, H4_FN_VOID fn = []() {}, H4_FN_VOID fnc = nullptr, uint32_t u = 0,bool s=false);
+                H4_TASK_PTR 	sequence(H4_SEQ_LIST S,H4_FN_VOID fnc=nullptr, uint32_t u = 0,bool s=false);
 
                 H4_TASK_PTR		cancel(H4_TASK_PTR t = context) { return endK(t); } // ? rv ?
                 void			cancel(std::initializer_list<H4_TASK_PTR> l){ for(auto const t:l) cancel(t); }
@@ -240,57 +242,4 @@ class H4: public pq{
                 }
 };
 
-/*
-template<typename T>
-class pr{
-        H4_TIMER ctx;
-        template<typename T2>
-        T2  put(T2 v){ 
-            memcpy(ctx->partial,reinterpret_cast<void*>(&v),size);
-            return get<T2>();
-            }
-        template<typename T2>
-        T2  get(){ return (*(reinterpret_cast<T2*>(ctx->partial))); }
-
-    public:
-        size_t   size=sizeof(T);
-
-        pr(T v,H4_TIMER c=ME): ctx(c){
-            if(!ctx->partial){ 
-                ctx->partial=reinterpret_cast<T*>(malloc(size));
-                put<T>(v);
-            }
-        }
-
-        pr operator=( const T other) { return put(other);  }
-
-        operator T() { return get<T>(); }
-
-        T operator +(T v) { return get<T>()+v; }
-
-        T operator +=(T v) { return put<T>(get<T>()+v); }
-
-        T* operator->() const { return reinterpret_cast<T*>(ctx->partial); }
-};
-
-*/
 extern H4 h4;
-
-template<typename T>
-static void h4Chunker(T &x,std::function<void(typename T::iterator)> fn,uint32_t lo=H4_JITTER_LO,uint32_t hi=H4_JITTER_HI,H4_FN_VOID final=nullptr){
-//    #pragma message("h4Chunker is deprecated and will be remove at the next release in favour of 'h4::worker'")
-    H4_TIMER p=h4.repeatWhile(
-        H4Countdown(x.size()),
-        task::randomRange(lo,hi), // arbitrary
-        [=](){ 
-            typename T::iterator thunk;
-            ME->getPartial(&thunk);
-            fn(thunk++);
-            ME->putPartial((void *)&thunk);
-            yield();
-            },
-        final,
-        H4_CHUNKER_ID);
-    typename T::iterator chunkIt=x.begin();
-    p->createPartial((void *)&chunkIt, sizeof(typename T::iterator));
-}

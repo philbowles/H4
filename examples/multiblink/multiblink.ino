@@ -2,9 +2,9 @@
 
 H4 h4(115200); // Automatically starts Serial for you if speed provided
 
-#define LED1  LED_GREEN // these values will depend on your specific board
-#define LED2  LED_RED // Do not use the same values without knowing why!
-#define LED3  LED_BLUE
+#define LED1  D6 // these values will depend on your specific board
+#define LED2  D7 // Do not use the same values without knowing why!
+#define LED3  D8
 
 void myCallback(uint8_t pin){
     digitalWrite(pin, !digitalRead(pin)); // invert pin state

@@ -13,13 +13,19 @@ H4	KEYWORD1
 #######################################
 
 h4	KEYWORD1
-H4_TASK_PTR	KEYWORD1
-H4_TIMER	KEYWORD1
+H4Countdown	KEYWORD1
+
+H4_FN_COUNT	KEYWORD1
+H4_FN_RTPTR	KEYWORD1
+H4_FN_SEQ	KEYWORD1
+H4_FN_TASK	KEYWORD1
 H4_FN_TIF	KEYWORD1
 H4_FN_VOID	KEYWORD1
-H4_FN_COUNT	KEYWORD1
 H4_INT_MAP	KEYWORD1
-H4_FN_COUNT	KEYWORD1
+H4_SEQ_LIST	KEYWORD1
+H4_TASK_PTR	KEYWORD1
+H4_TIMER	KEYWORD1
+H4_TIMER_MAP	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -28,7 +34,6 @@ H4_FN_COUNT	KEYWORD1
 cancel	KEYWORD2
 cancelAll	KEYWORD2
 cancelSingleton	KEYWORD2
-h4Chunker	KEYWORD2
 createPartial	KEYWORD2
 every	KEYWORD2
 endF	KEYWORD2
@@ -44,6 +49,7 @@ hookReboot	KEYWORD2
 h4reboot	KEYWORD2
 h4setup	KEYWORD2
 loop	KEYWORD2
+nowAndThen	KEYWORD2
 nTimes	KEYWORD2
 nTimesRandom	KEYWORD2
 once	KEYWORD2
@@ -58,6 +64,8 @@ repeatWhile	KEYWORD2
 repeatWhileEver	KEYWORD2
 requeue	KEYWORD2
 schedule	KEYWORD2
+sequence	KEYWORD2
+worker	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)

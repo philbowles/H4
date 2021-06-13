@@ -27,6 +27,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 #include <H4.h>
+#include<climits>
 
 #if H4_COUNT_LOOPS
 uint32_t h4Nloops;
@@ -270,7 +271,7 @@ H4_TASK_PTR H4::nowAndThen(std::vector<uint32_t> times, H4_FN_VOID fn, H4_FN_VOI
             auto pos=MY(nrq);
             if(pos<shifted.size()) MY(rmin)=shifted[pos+1];
         },
-        [=]{ return 0; },
+        []{ return 0; },
         fnc,
         u,
         s
@@ -302,6 +303,31 @@ H4_TASK_PTR H4::repeatWhileEver(H4_FN_COUNT fncd,uint32_t msec,H4_FN_VOID fn,H4_
 			TAG(13),s);
 }
 
+H4_TASK_PTR H4::sequence(H4_SEQ_LIST S,H4_FN_VOID fnc,uint32_t u,bool s){
+    S.push_back([]{ return nullptr; });
+    H4_TIMER moi=h4.worker<H4_SEQ_LIST>(
+        S,
+        [=](H4_FN_SEQ w){
+            H4_TIMER moi=reinterpret_cast<H4_TIMER>(ME->userStore.back());
+            H4_TIMER fuc=w();
+            if(fuc) {
+            H4_FN_VOID chain=fuc->chain;
+            fuc->chain=[=]{
+                if(chain) chain();
+                moi->rmin=0;
+                moi->schedule();
+            };
+            }
+            moi->rmin=INT_MAX;
+        },
+        []{ return 0; },
+        fnc,    
+        TAG(15),
+        s
+    );
+    moi->userStore.push_back(reinterpret_cast<uint32_t>(moi));
+    return moi;
+}
 #ifndef __cplusplus
 extern "C" {
 #endif

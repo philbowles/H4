@@ -2,9 +2,17 @@
 
 ---
 
-## Version 3.0.1
+## Version 3.1.0
 
-[Release Notes 3.0.1](docs/rn301.md)
+[Release Notes 3.1.0](docs/rn310.md) 14/06/2021
+
+Excutive Summary: three new timer funstions added:
+
+* `nowAndThen` - runs a function immediatley and the repeats at epcifically-timed intervals provided by user
+* `sequence` - runs a list fo functions one after the other: think "chaining" without the "flying ducks"
+* `worker` - replaces h4Chunker: breaks a container into constituent parts and schedule a function for each
+
+---
 
 Functional scheduler in the form of an ArduinoIDE library providing timers for ESP8266 / ESP32 which can call:
 
@@ -17,6 +25,7 @@ Think of it as "Ticker on steroids". H4 has many more options:
 
 * every
 * everyRandom
+* nowAndThen
 * nTimes
 * nTimesRandom
 * once
@@ -26,6 +35,7 @@ Think of it as "Ticker on steroids". H4 has many more options:
 * randomTimesRandom
 * repeatWhile
 * repeatWhileEver
+* sequence
 
 These allow you to run multiple simultaneous* tasks without worrying about any other tasks or the watchdog timer.
 
@@ -190,13 +200,15 @@ void onReboot(void); // called just prior to reboot to allow user to clean up et
 
 All timers return a "handle" (type `H4_TIMER` - see footnote*) which can be used to subsequently cancel the task. It can mostly be ignored.
 
-With one exception (`queueFunction`) all tasks start _after_ the first specified time interval and not immediately. Using the infinite task "`every(1000...`" will invoke the first instance of user callback at Tstart + 1sec (1000 mS).
+Most tasks start _after_ the first specified time interval and not immediately. Using the infinite task "`every(1000...`" will invoke the first instance of user callback at Tstart + 1sec (1000 mS).
 
-All callbacks take an optional "chain" function (type `H4_FN_VOID`) which is called on completion of the timer (if ever). "Completion" can occur one of three ways:
+Most tasks  take an optional "chain" function (type `H4_FN_VOID`) which is called on completion of the timer (if ever). "Completion" can occur one of three ways:
 
 * Naturally-expiring (e.g. "`onceXXX`") task exits
 * Free-running (e.g. "`everyXXX`") task is cancelled by user code
 * (Rarely) Task can terminate itself arbitrarily
+
+Watch the video [How to "chain" timers](https://youtu.be/flGNBtF72Ng)
 
 Tasks which only "make sense" if they are unique (e.g. a system "ticker") can declare themselves on creation as a "singleton". Any existing task with the same type and ID will be cancelled and replaced by the new instance, ensuring only one copy is ever running at a time.
 
@@ -237,21 +249,7 @@ Don't mess with this: 5 is *usually* plenty. Leave it alone till you know more a
 ### Timers (all timed in milliseconds)
 
 ```cpp
-/*
-every   // run task every t milliseconds
-everyRandom // run task continuously rescheduling at random time nMin < t < nMax milliseconds
-nTimes // run task n times at intervals of t milliseconds 
-nTimesRandom // run task n times rescheduling at random time nMin < t < nMax milliseconds
-once // have a guess
-onceRandom // have another guess
-queueFunction // run task NOW* - no initial interval t.[* on next schedule: MCU-dependent, but ~uSec]
-randomTimes // run task any number of times nMin < n < nMax at intervals of t
-randomTimesRandom // run task random number of time nMin < n < nMax at random intervals of nMin < t < nMax milliseconds
-repeatWhile // run task until user-defined "countdown" function (type H4_FN_COUNT) returns zero then cancel
-repeatWhileEver // run task until user-defined "countdown" function (type H4_FN_COUNT) returns zero then reschedule [ See Note 1]
-
-  common parameters:
-
+/*  
   fn  = your callback function
   fnc  = your "chain" callback function called on timer completion (if ever)
   msec = time in milliseconds
@@ -261,9 +259,25 @@ repeatWhileEver // run task until user-defined "countdown" function (type H4_FN_
   tmax = maximum number of times to run
   tmin = minimum number of times to run
   u = unique ID: leave as zero or see "Advanced Topics"
+
+every   // run task every t milliseconds
+everyRandom // run task continuously rescheduling at random time nMin < t < nMax milliseconds
+nowAndThen // runs fn immediately and then again at a sries of user-provide intervals 
+nTimes // run task n times at intervals of t milliseconds 
+nTimesRandom // run task n times rescheduling at random time nMin < t < nMax milliseconds
+once // have a guess
+onceRandom // have another guess
+queueFunction // run task NOW* - no initial interval t.[* on next schedule: MCU-dependent, but ~uSec]
+randomTimes // run task any number of times nMin < n < nMax at intervals of t
+randomTimesRandom // run task random number of time nMin < n < nMax at random intervals of nMin < t < nMax milliseconds
+repeatWhile // run task until user-defined "countdown" function (type H4_FN_COUNT) returns zero then cancel
+repeatWhileEver // run task until user-defined "countdown" function (type H4_FN_COUNT) returns zero then reschedule [ See Note 1]
+sequence // takes a std::vector of functions and runs them one after the other (async in the background - see worker)
+
 */
 H4_TIMER every(uint32_t msec, H4_FN_VOID fn, H4_FN_VOID fnc = nullptr, uint32_t u = 0,bool s=false);
 H4_TIMER everyRandom(uint32_t Rmin, uint32_t Rmax, H4_FN_VOID fn, H4_FN_VOID fnc = nullptr, uint32_t u = 0,bool s=false);
+H4_TASK_PTR nowAndThen(std::vector<uint32_t> times, H4_FN_VOID fn, H4_FN_VOID fnc = nullptr, uint32_t u = 0,bool s=false);
 H4_TIMER nTimes(uint32_t n, uint32_t msec, H4_FN_VOID fn, H4_FN_VOID fnc = nullptr, uint32_t u = 0,bool s=false);
 H4_TIMER nTimesRandom(uint32_t n, uint32_t msec, uint32_t Rmax, H4_FN_VOID fn, H4_FN_VOID fnc = nullptr, uint32_t u = 0,bool s=false);
 H4_TIMER once(uint32_t msec, H4_FN_VOID fn, H4_FN_VOID fnc = nullptr, uint32_t u = 0,bool s=false);
@@ -273,6 +287,7 @@ H4_TIMER randomTimes(uint32_t tmin, uint32_t tmax, uint32_t msec, H4_FN_VOID fn,
 H4_TIMER randomTimesRandom(uint32_t tmin, uint32_t tmax, uint32_t msec, uint32_t Rmax, H4_FN_VOID fn, H4_FN_VOID fnc = nullptr, uint32_t u = 0,bool s=false);
 H4_TIMER repeatWhile(H4_FN_COUNT w, uint32_t msec, H4_FN_VOID fn = []() {}, H4_FN_VOID fnc = nullptr, uint32_t u = 0,bool s=false);
 H4_TIMER repeatWhileEver(H4_FN_COUNT w, uint32_t msec, H4_FN_VOID fn = []() {}, H4_FN_VOID fnc = nullptr, uint32_t u = 0,bool s=false);
+H4_TIMER 	sequence(H4_SEQ_LIST S,H4_FN_VOID fnc=nullptr, uint32_t u = 0,bool s=false);
 
 ```
 
@@ -362,29 +377,10 @@ As you may have guessed by now, `h4.context` is simply a task pointer to an item
 
 `h4.context->partial` is a pointer to the partial results and can be used *IN READ ONLY MODE* in preference to `getPartial()`. *DO NOT* run off the end of it: `h4.context->len` contains its size in byes saved from `storePartial()`. *DO NOT CHANGE THE VALUE OF len!!!*
 
-That is just an example: the `h4Chunker` template function already does it for you:
+That is just an example: the `worker` template function already does it for you:
 
-```cpp
-template<typename T>
-static void h4Chunker(T const& x,function<void(typename T::const_iterator)> fn);
+[Example worker Sketch](examples/advanced/chunkier/chunkier.ino)
 
-/*
-Takes a data structure of type T and calls f with increasing values of an iterator until the iterator == T::end();
-
-f should just manage the single instance of the T sub-item and exit
-
-The millisecond time between consecutive calls is randomised to spread the load and can be changed by tweaking these values in H4.h:
-
-#define H4_JITTER_LO    100
-#define H4_JITTER_HI    350
-
-*/
-
-```
-
-[Example Sketch](examples/advanced/chunkier/chunkier.ino)
-
-[Advanced Example Sketch](examples/chunky_maths/chunky_maths.ino)
 
 ---
 
@@ -425,6 +421,7 @@ size_t          len=0; // length of partial data
 uint32_t        at;  // "due" time [ see note 3 ]
 uint32_t        nrq=0; // number of times this task has been RE-queued. Note the "RE-" [ See Note 4 ]
 void*           partial=NULL; // ptr -> Your partial results
+std::vector<uint32_t> userStore; // anything you want preserved between iterations
 ```
 
 *Note 2*
