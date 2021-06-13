@@ -27,10 +27,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef H4_H
-#define H4_H
+#pragma once
 
-#define H4_VERSION  "3.0.1"
+#define H4_VERSION  "3.1.0"
 
 #define H4_NO_USERLOOP      // improves performance
 #define H4_COUNT_LOOPS    0 // DIAGNOSTICS
@@ -109,7 +108,7 @@ class task{
             uint32_t        at;
             uint32_t		nrq=0;
             void*			partial=NULL;
-
+            std::vector<uint32_t> userStore;
 			bool            operator()(const task* lhs, const task* rhs) const;
 			void            operator()();
 
@@ -138,7 +137,7 @@ class task{
                 void        putPartial(void *d){ memcpy(partial, d, len); }
                 void 		requeue();
 				void 		schedule();
-		static 	uint32_t	randomRange(uint32_t lo,uint32_t hi); // move to h4
+		static 	uint32_t	randomRange(uint32_t lo=H4_JITTER_LO,uint32_t hi=H4_JITTER_HI); // move to h4
 };
 //
 //		P R I O R I T Y   Q U E U E (has to be after task)
@@ -184,6 +183,7 @@ class H4: public pq{
 
                 H4_TASK_PTR 	every(uint32_t msec, H4_FN_VOID fn, H4_FN_VOID fnc = nullptr, uint32_t u = 0,bool s=false);
                 H4_TASK_PTR 	everyRandom(uint32_t Rmin, uint32_t Rmax, H4_FN_VOID fn, H4_FN_VOID fnc = nullptr, uint32_t u = 0,bool s=false);
+                H4_TASK_PTR 	nowAndThen(std::vector<uint32_t> times, H4_FN_VOID fn, H4_FN_VOID fnc = nullptr, uint32_t u = 0,bool s=false);
                 H4_TASK_PTR 	nTimes(uint32_t n, uint32_t msec, H4_FN_VOID fn, H4_FN_VOID fnc = nullptr, uint32_t u = 0,bool s=false);
                 H4_TASK_PTR 	nTimesRandom(uint32_t n, uint32_t msec, uint32_t Rmax, H4_FN_VOID fn, H4_FN_VOID fnc = nullptr, uint32_t u = 0,bool s=false);
                 H4_TASK_PTR		once(uint32_t msec, H4_FN_VOID fn, H4_FN_VOID fnc = nullptr, uint32_t u = 0,bool s=false);
@@ -208,29 +208,61 @@ class H4: public pq{
                 void            _hookEvent(H4_FN_TASK f){ taskEvent=f; }     
                 void            _hookLoop(H4_FN_VOID f,uint32_t subid);
                 bool            _unHook(uint32_t token);
+//
+                template<typename T>
+                H4_TIMER        worker(T container,
+                    std::function<void(typename T::value_type)> fn,
+                    H4_FN_COUNT chunk=[]{ return (uint32_t) random(H4_JITTER_LO,H4_JITTER_HI); },
+                    H4_FN_VOID fnc=nullptr,
+                    uint32_t u=0,
+                    bool s=false)
+                    {
+                    ME=add([=]{
+                            T* ppp;
+                            ME->getPartial(&ppp);
+                            fn((*(ppp))[MY(nrq)]);
+                        },
+                        chunk(),
+                        0,
+                        H4Countdown(container.size()),
+                        [=]{
+                            if(fnc) fnc();
+                            ME->userStore.clear();
+                            ME->userStore.shrink_to_fit();
+                        },
+                        (u < 100 ? TAG(14):u),
+                        s
+                    );
+                    T* pp=new T;
+                    *pp=container;
+                    ME->createPartial((void *)&pp, sizeof(pp));
+                    return ME;
+                }
 };
 
+/*
 template<typename T>
 class pr{
-        size_t   size=sizeof(T);
-
+        H4_TIMER ctx;
         template<typename T2>
         T2  put(T2 v){ 
-            memcpy(MY(partial),reinterpret_cast<void*>(&v),size);
+            memcpy(ctx->partial,reinterpret_cast<void*>(&v),size);
             return get<T2>();
             }
         template<typename T2>
-        T2  get(){ return (*(reinterpret_cast<T2*>(MY(partial)))); }
+        T2  get(){ return (*(reinterpret_cast<T2*>(ctx->partial))); }
 
     public:
-        pr(T v){
-            if(!MY(partial)){ 
-                MY(partial)=reinterpret_cast<T*>(malloc(size));
+        size_t   size=sizeof(T);
+
+        pr(T v,H4_TIMER c=ME): ctx(c){
+            if(!ctx->partial){ 
+                ctx->partial=reinterpret_cast<T*>(malloc(size));
                 put<T>(v);
             }
         }
 
-        pr operator=( const T other ) { return put(other);  }
+        pr operator=( const T other) { return put(other);  }
 
         operator T() { return get<T>(); }
 
@@ -238,19 +270,15 @@ class pr{
 
         T operator +=(T v) { return put<T>(get<T>()+v); }
 
-        T* operator->() const {
-        return reinterpret_cast<T*>(MY(partial));
-      }
+        T* operator->() const { return reinterpret_cast<T*>(ctx->partial); }
 };
 
-#ifdef CUBEIDE
-extern UART_HandleTypeDef huart3;
-#endif
-
+*/
 extern H4 h4;
 
 template<typename T>
 static void h4Chunker(T &x,std::function<void(typename T::iterator)> fn,uint32_t lo=H4_JITTER_LO,uint32_t hi=H4_JITTER_HI,H4_FN_VOID final=nullptr){
+//    #pragma message("h4Chunker is deprecated and will be remove at the next release in favour of 'h4::worker'")
     H4_TIMER p=h4.repeatWhile(
         H4Countdown(x.size()),
         task::randomRange(lo,hi), // arbitrary
@@ -266,5 +294,3 @@ static void h4Chunker(T &x,std::function<void(typename T::iterator)> fn,uint32_t
     typename T::iterator chunkIt=x.begin();
     p->createPartial((void *)&chunkIt, sizeof(typename T::iterator));
 }
-
-#endif // H4_H

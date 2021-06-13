@@ -1,0 +1,12 @@
+H4P:
+
+menageir.md => all other libs
+TK_DST_USA / endU
+
+pinmachine move delegate into class and make static
+mqtt docs re https,192.168.1.4,uname,pword,1883
+
+H4:
+deprecate pr;
+deprecate chunker
+vec(uints)
