@@ -1,4 +1,4 @@
-![H4 Flyer](/assets/logo.jpg)
+![H4 Flyer](assets/logo.jpg)
 
 ---
 
@@ -6,8 +6,10 @@
 
 [Release Notes 3.1.0](docs/rn310.md) 14/06/2021
 
-Excutive Summary: three new timer funstions added:
+Excutive Summary: 5 new timer functions added:
 
+* `nowAndEvery` - as `every` but does not wait till the period elapses before running the first iteration. 
+* `nowAndEveryRandom` - as `everyRandom` but does not wait till the period elapses before running the first iteration.
 * `nowAndThen` - runs a function immediatley and the repeats at epcifically-timed intervals provided by user
 * `sequence` - runs a list fo functions one after the other: think "chaining" without the "flying ducks"
 * `worker` - replaces h4Chunker: breaks a container into constituent parts and schedule a function for each

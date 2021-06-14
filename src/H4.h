@@ -74,6 +74,7 @@ using H4_SEQ_LIST   = std::vector<H4_FN_SEQ>;
 #define MY(x) H4::context->x
 #define TAG(x) (u+((x)*100))
 #define H4_ADDSEQUENCE(c,f) c.push_back([]{ return f });
+//#define H4_ADDSEQUENCE(c,f) c.push_back([]{ return []()->H4_TIMER{ f }(); });
 class H4Countdown {
 	public:
 		uint32_t 	count;
@@ -184,6 +185,8 @@ class H4: public pq{
 
                 H4_TASK_PTR 	every(uint32_t msec, H4_FN_VOID fn, H4_FN_VOID fnc = nullptr, uint32_t u = 0,bool s=false);
                 H4_TASK_PTR 	everyRandom(uint32_t Rmin, uint32_t Rmax, H4_FN_VOID fn, H4_FN_VOID fnc = nullptr, uint32_t u = 0,bool s=false);
+                H4_TASK_PTR 	nowAndEvery(uint32_t msec, H4_FN_VOID fn, H4_FN_VOID fnc = nullptr, uint32_t u = 0,bool s=false);
+                H4_TASK_PTR 	nowAndEveryRandom(uint32_t Rmin, uint32_t Rmax, H4_FN_VOID fn, H4_FN_VOID fnc = nullptr, uint32_t u = 0,bool s=false);
                 H4_TASK_PTR 	nowAndThen(std::vector<uint32_t> times, H4_FN_VOID fn, H4_FN_VOID fnc = nullptr, uint32_t u = 0,bool s=false);
                 H4_TASK_PTR 	nTimes(uint32_t n, uint32_t msec, H4_FN_VOID fn, H4_FN_VOID fnc = nullptr, uint32_t u = 0,bool s=false);
                 H4_TASK_PTR 	nTimesRandom(uint32_t n, uint32_t msec, uint32_t Rmax, H4_FN_VOID fn, H4_FN_VOID fnc = nullptr, uint32_t u = 0,bool s=false);

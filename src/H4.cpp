@@ -278,6 +278,20 @@ H4_TASK_PTR H4::nowAndThen(std::vector<uint32_t> times, H4_FN_VOID fn, H4_FN_VOI
     );
 }
 
+H4_TASK_PTR H4::nowAndEvery(uint32_t msec,H4_FN_VOID fn,H4_FN_VOID fnc,uint32_t u,bool s){
+    H4_TIMER rv=add(fn,msec,0,nullptr,fnc,TAG(16),s);
+    fn();
+    rv->nrq=1;
+    return rv;
+}
+
+H4_TASK_PTR H4::nowAndEveryRandom(uint32_t Rmin,uint32_t Rmax,H4_FN_VOID fn,H4_FN_VOID fnc,uint32_t u,bool s){
+    H4_TIMER rv=add(fn,Rmin,Rmax,nullptr,fnc,TAG(17),s);
+    fn();
+    rv->nrq=1;
+    return rv;
+}
+
 H4_TASK_PTR H4::nTimes(uint32_t n,uint32_t msec,H4_FN_VOID fn,H4_FN_VOID fnc,uint32_t u,bool s){ return add(fn,msec,0,H4Countdown(n),fnc,TAG(5),s); }
 
 H4_TASK_PTR H4::nTimesRandom(uint32_t n,uint32_t Rmin,uint32_t Rmax,H4_FN_VOID fn,H4_FN_VOID fnc,uint32_t u,bool s){ return add(fn,Rmin,Rmax,H4Countdown(n),fnc,TAG(6),s); }
