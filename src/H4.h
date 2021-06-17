@@ -33,7 +33,7 @@ SOFTWARE.
 #define H4_VERSION  "3.0.1"
 
 #define H4_NO_USERLOOP      // improves performance
-#define H4_COUNT_LOOPS    0 // DIAGNOSTICS
+#define H4_COUNT_LOOPS    1 // DIAGNOSTICS
 
 #define H4_JITTER_LO    100 // Entropy lower bound
 #define H4_JITTER_HI    350 // Entropy upper bound
@@ -208,6 +208,9 @@ class H4: public pq{
                 void            _hookEvent(H4_FN_TASK f){ taskEvent=f; }     
                 void            _hookLoop(H4_FN_VOID f,uint32_t subid);
                 bool            _unHook(uint32_t token);
+/*
+
+*/
 };
 
 template<typename T>

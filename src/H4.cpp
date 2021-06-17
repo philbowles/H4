@@ -95,6 +95,10 @@ task* pq::next(){
 	  }
 	}
 	HAL_enableInterrupts();
+	if(t){ // H4P 35000 35100
+        H4::context=t;
+        (*t)();
+    };
 	return t;
 }
 
@@ -289,11 +293,15 @@ H4_TASK_PTR H4::repeatWhileEver(H4_FN_COUNT fncd,uint32_t msec,H4_FN_VOID fn,H4_
 extern "C" {
 #endif
 	void H4::loop(){
-            if(context=h4.next()){
-                (*context)();
-                context=nullptr;
-            }
-            for(auto const f:loopChain) f();
+        /* H4P 34900 - 35100
+        if(context=h4.next()){
+            (*context)();
+            context=nullptr;
+        }
+        */
+        h4.next();
+        for(auto const f:loopChain) f();
+
 #ifndef H4_NO_USERLOOP
 		h4UserLoop();
 #endif
