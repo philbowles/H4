@@ -33,7 +33,8 @@ SOFTWARE.
 #define H4_VERSION  "3.0.1"
 
 #define H4_NO_USERLOOP      // improves performance
-#define H4_COUNT_LOOPS    1 // DIAGNOSTICS
+#define H4_COUNT_LOOPS    0 // DIAGNOSTICS
+#define H4_HOOK_TASKS     0
 
 #define H4_JITTER_LO    100 // Entropy lower bound
 #define H4_JITTER_HI    350 // Entropy upper bound
@@ -59,7 +60,7 @@ using	H4_TASK_PTR		=task*;
 using	H4_TIMER		=H4_TASK_PTR;
 
 using	H4_FN_COUNT		=std::function<uint32_t(void)>;
-using	H4_FN_TASK		=std::function<void(H4_TASK_PTR,char)>;
+using	H4_FN_TASK		=std::function<void(H4_TASK_PTR,uint32_t)>;
 using	H4_FN_TIF		=std::function<bool(H4_TASK_PTR)>;
 using	H4_FN_VOID		=std::function<void(void)>;
 using   H4_FN_RTPTR     = H4_FN_COUNT;
@@ -141,25 +142,6 @@ class task{
 		static 	uint32_t	randomRange(uint32_t lo,uint32_t hi); // move to h4
 };
 //
-//		P R I O R I T Y   Q U E U E (has to be after task)
-//
-using H4Q = std::priority_queue<task*, std::vector<task*>, task>;
-class pq: public H4Q {
-	protected:
-            uint32_t 		gpFramed(task* t,std::function<uint32_t()> f);
-            bool  			has(task* t){ return find(c.begin(),c.end(),t) != c.end(); }
-            uint32_t		endF(task* t);
-            uint32_t		endU(task* t);
-            bool			endC(task* t,H4_FN_TIF f);
-            task*  			endK(task* t);
-            task* 			next();
-            void  			qt(task* t);
-            void  			reserve(size_t n){ c.reserve(n); }
-            H4_FN_TASK      taskEvent=[](task*,char){};
-    public:
-            task*			add(H4_FN_VOID _f,uint32_t _m,uint32_t _x,H4_FN_COUNT _r,H4_FN_VOID _c,uint32_t _u=0,bool _s=false);
-};
-//
 //      H 4
 //
 extern void h4StartPlugins();
@@ -167,7 +149,7 @@ extern void h4StartPlugins();
     extern uint32_t h4Nloops;
 #endif
 
-class H4: public pq{
+class H4: public std::priority_queue<task*, std::vector<task*>, task>{ // H4P 35500 - 35700
 	friend class task;
                 std::vector<H4_FN_VOID> loopChain;
     public:       
@@ -205,12 +187,33 @@ class H4: public pq{
 //              syscall only
                 size_t          _capacity(){ return c.capacity(); } 
                 std::vector<task*>   _copyQ();
-                void            _hookEvent(H4_FN_TASK f){ taskEvent=f; }     
                 void            _hookLoop(H4_FN_VOID f,uint32_t subid);
                 bool            _unHook(uint32_t token);
-/*
 
-*/
+//	protected:
+                uint32_t 		gpFramed(task* t,std::function<uint32_t()> f);
+                bool  			has(task* t){ return find(c.begin(),c.end(),t) != c.end(); }
+                uint32_t		endF(task* t);
+                uint32_t		endU(task* t);
+                bool			endC(task* t,H4_FN_TIF f);
+                task*  			endK(task* t);
+                task* 			next();
+                void  			qt(task* t);
+                void  			reserve(size_t n){ c.reserve(n); }
+                H4_FN_TASK      taskEvent=[](task*,uint32_t){};
+//
+#if H4_HOOK_TASKS
+        static  H4_FN_TASK      taskHook;
+
+                void            _hookTask(H4_FN_TASK f){ taskHook=f; }
+        static  std::string     dumpTask(task* t,uint32_t faze);
+        static  void            dumpQ();    
+        static  std::string     h4GetTaskType(uint32_t t);
+        static  const char*     h4GetTaskName(uint32_t t);
+#endif
+
+//    public:
+                task*			add(H4_FN_VOID _f,uint32_t _m,uint32_t _x,H4_FN_COUNT _r,H4_FN_VOID _c,uint32_t _u=0,bool _s=false);
 };
 
 template<typename T>

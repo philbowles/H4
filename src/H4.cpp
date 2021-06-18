@@ -59,55 +59,71 @@ void h4reboot(){ h4rebootCore(); }
 
 H4Random::H4Random(uint32_t rmin,uint32_t rmax){ count=task::randomRange(rmin,rmax); }
 
-task* pq::add(H4_FN_VOID _f,uint32_t _m,uint32_t _x,H4_FN_COUNT _r,H4_FN_VOID _c,uint32_t _u,bool _s){
-	task* t=new task(_f,_m,_x,_r,_c,_u,_s);
-    taskEvent(t,'C');
-	qt(t);
-	return t;
-}
+//__attribute__((weak)) H4_INT_MAP h4TaskNames={};
+extern H4_INT_MAP h4TaskNames;
 
-uint32_t pq::gpFramed(task* t,H4_FN_RTPTR f){
-	uint32_t rv=0;
-	if(t){
-		HAL_disableInterrupts();
-		if(has(t) || (t==H4::context)) rv=f(); // fix bug where context = 0!
-		HAL_enableInterrupts();
-	}
-	return rv;
-}
+#if H4_HOOK_TASKS
+    H4_FN_TASK H4::taskHook=[](task* t,uint32_t faze=0){ Serial.printf("%s\n",dumpTask(t,faze).data());  };
 
-uint32_t pq::endF(task* t){ return gpFramed(t,std::bind(&task::endF,t)); }
-
-uint32_t pq::endU(task* t){	return gpFramed(t,std::bind(&task::endU,t)); }
-
-bool 	 pq::endC(task* t,H4_FN_TIF f){ return static_cast<bool>(gpFramed(t,std::bind(&task::endC,t,f))); }
-
-task* 	 pq::endK(task* t){ return reinterpret_cast<task*>(gpFramed(t,std::bind(&task::endK,t))); }
-
-task* pq::next(){
-	task* t=nullptr;
-    uint32_t now=(uint32_t) millis(); // can't do inside loop...clocks dont work when HAL_disableInterrupts()!!!
-	HAL_disableInterrupts();
-	if(size()){
-	   if(((int)(top()->at -  now)) < 1) {
-		t=top();
-		pop();
-	  }
-	}
-	HAL_enableInterrupts();
-	if(t){ // H4P 35000 35100
-        H4::context=t;
-        (*t)();
+    H4_INT_MAP taskTypes={
+        {1,"link"},
+        {3,"evry"}, // 3
+        {4,"evrn"}, // 4
+        {5,"ntim"}, // 5
+        {6,"ntrn"}, // 6
+        {7,"once"}, // 7
+        {8,"1xrn"}, // 8
+        {9,"qfun"}, // 9
+        {10,"rntx"}, // 10
+        {11,"rnrn"}, // 11
+        {12,"rptw"}, // 12
+        {13,"rpwe"},
+        {14,"work"},
+        {15,"seqn"},
+        {16,"naev"},
+        {17,"naer"}
     };
-	return t;
+    const char* taskPhase[]={"IDL","NEW","SCH","OOQ","DIE"};
+
+std::string H4::h4GetTaskType(uint32_t e){ return taskTypes.count(e) ? taskTypes[e]:("????"); }
+const char* H4::h4GetTaskName(uint32_t id){ return h4TaskNames.count(id) ? h4TaskNames[id].data():"ANON"; }
+
+std::string H4::dumpTask(task* t,uint32_t faze){
+    char buf[256];
+    snprintf(buf,255,"T=%08u %s: Q=%02d 0x%08x %s/%s %s %10u(T%+10u) %10u %10u %10u L=%d",
+        millis(),
+        taskPhase[faze],
+        h4.size(),
+        (void*) t,
+//        (void*) t->parent,
+        h4GetTaskType(t->uid/100).data(),
+        h4GetTaskName(t->uid%100),
+        t->singleton ? "S":" ",
+        t->at,
+        millis()-t->at,
+        t->rmin,
+        t->rmax,
+        t->nrq,
+        t->len
+//        t->userStore.size()
+        );
+
+    return std::string(buf);
 }
 
-void pq::qt(task* t){
-	HAL_disableInterrupts();
-	push(t);
-	HAL_enableInterrupts();
-    taskEvent(t,'S');
+void H4::dumpQ(){
+    if(h4.size()){
+	    Serial.printf("           ACT   nQ    Handle   Type/name    Due @tick(T+         )        Min        Max        nRQ Len\n"); 
+//  reply("T=00003246 DEL: Q=00 0x3fff3114 seqn/CTRL         3217(         29)          0          0          0 L=0 U=0
+        std::vector<task*> tlist=h4._copyQ();
+        std::sort(tlist.begin(),tlist.end(),[](const task* a, const task* b){ return a->at < b->at; });
+        for(auto const& t:tlist) Serial.printf("%s\n",dumpTask(t,0).data()); // faze=quiescent
+        Serial.printf("\n");
+    } else Serial.printf("QUEUE EMPTY\n");
 }
+
+#endif
+
 //
 //		task
 //
@@ -169,7 +185,9 @@ uint32_t task::cleardown(uint32_t pass){
 }
 
 void task::_destruct(){
-    h4.taskEvent(this,'D');
+#if H4_HOOK_TASKS
+    H4::taskHook(ME,4);
+#endif
 	if(partial) free(partial);
     delete this;
 }
@@ -213,6 +231,60 @@ void task::createPartial(void* d,size_t l){
 }
 //
 //      H4
+//
+task* H4::add(H4_FN_VOID _f,uint32_t _m,uint32_t _x,H4_FN_COUNT _r,H4_FN_VOID _c,uint32_t _u,bool _s){
+	task* t=new task(_f,_m,_x,_r,_c,_u,_s);
+#if H4_HOOK_TASKS
+    H4::taskHook(t,1);
+#endif
+	qt(t);
+	return t;
+}
+
+uint32_t H4::gpFramed(task* t,H4_FN_RTPTR f){
+	uint32_t rv=0;
+	if(t){
+		HAL_disableInterrupts();
+		if(has(t) || (t==H4::context)) rv=f(); // fix bug where context = 0!
+		HAL_enableInterrupts();
+	}
+	return rv;
+}
+
+uint32_t H4::endF(task* t){ return gpFramed(t,std::bind(&task::endF,t)); }
+
+uint32_t H4::endU(task* t){	return gpFramed(t,std::bind(&task::endU,t)); }
+
+bool 	 H4::endC(task* t,H4_FN_TIF f){ return static_cast<bool>(gpFramed(t,std::bind(&task::endC,t,f))); }
+
+task* 	 H4::endK(task* t){ return reinterpret_cast<task*>(gpFramed(t,std::bind(&task::endK,t))); }
+
+task* H4::next(){
+	task* t=nullptr;
+    uint32_t now=(uint32_t) millis(); // can't do inside loop...clocks dont work when HAL_disableInterrupts()!!!
+	HAL_disableInterrupts();
+	if(size()){
+	   if(((int)(top()->at -  now)) < 1) {
+		t=top();
+		pop();
+	  }
+	}
+	HAL_enableInterrupts();
+	if(t){ // H4P 35000 35100
+        H4::context=t;
+        (*t)();
+    };
+	return t;
+}
+
+void H4::qt(task* t){
+	HAL_disableInterrupts();
+	push(t);
+	HAL_enableInterrupts();
+#if H4_HOOK_TASKS
+    H4::taskHook(t,2);
+#endif
+}
 //
 extern  void h4setup();
 
