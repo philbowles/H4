@@ -32,7 +32,7 @@ SOFTWARE.
 
 #define H4_VERSION  "3.0.1"
 
-#define H4_NO_USERLOOP      // improves performance
+#define H4_USERLOOP       0 // improves performance
 #define H4_COUNT_LOOPS    0 // DIAGNOSTICS
 #define H4_HOOK_TASKS     0
 
@@ -126,6 +126,8 @@ class task{
 			bool 			_s=false
 			);
 
+//        ~task();
+
 		static	void 		cancelSingleton(uint32_t id);
 				uint32_t 	cleardown(uint32_t t);
 //		The many ways to die... :)
@@ -145,9 +147,6 @@ class task{
 //      H 4
 //
 extern void h4StartPlugins();
-#if H4_COUNT_LOOPS
-    extern uint32_t h4Nloops;
-#endif
 
 class H4: public std::priority_queue<task*, std::vector<task*>, task>{ // H4P 35500 - 35700
 	friend class task;
@@ -248,10 +247,6 @@ class pr{
         return reinterpret_cast<T*>(MY(partial));
       }
 };
-
-#ifdef CUBEIDE
-extern UART_HandleTypeDef huart3;
-#endif
 
 extern H4 h4;
 

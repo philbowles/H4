@@ -28,21 +28,14 @@ SOFTWARE.
 */
 #include <H4.h>
 
-#if H4_COUNT_LOOPS
-uint32_t h4Nloops;
+#ifdef ARDUINO_ARCH_ESP32
+    portMUX_TYPE my_mutex = portMUX_INITIALIZER_UNLOCKED;
+    void HAL_enableInterrupts(){ portEXIT_CRITICAL(&my_mutex); }
+    void HAL_disableInterrupts(){ portENTER_CRITICAL(&my_mutex); }
+#else
+    void HAL_enableInterrupts(){ interrupts(); }
+    void HAL_disableInterrupts(){ noInterrupts();}
 #endif
-
-
-    #ifdef ARDUINO_ARCH_ESP32
-        portMUX_TYPE my_mutex = portMUX_INITIALIZER_UNLOCKED;
-	    void HAL_enableInterrupts(){ portEXIT_CRITICAL(&my_mutex); }
-
-	    void HAL_disableInterrupts(){ portENTER_CRITICAL(&my_mutex); }
-    #else
-        void HAL_enableInterrupts(){ interrupts(); }
-
-        void HAL_disableInterrupts(){ noInterrupts();}
-    #endif
 //
 //      and ...here we go!
 //
@@ -59,8 +52,11 @@ void h4reboot(){ h4rebootCore(); }
 
 H4Random::H4Random(uint32_t rmin,uint32_t rmax){ count=task::randomRange(rmin,rmax); }
 
-//__attribute__((weak)) H4_INT_MAP h4TaskNames={};
-extern H4_INT_MAP h4TaskNames;
+__attribute__((weak)) H4_INT_MAP h4TaskNames={};
+
+#if H4_COUNT_LOOPS
+uint32_t h4Nloops=0;
+#endif
 
 #if H4_HOOK_TASKS
     H4_FN_TASK H4::taskHook=[](task* t,uint32_t faze=0){ Serial.printf("%s\n",dumpTask(t,faze).data());  };
@@ -89,6 +85,7 @@ std::string H4::h4GetTaskType(uint32_t e){ return taskTypes.count(e) ? taskTypes
 const char* H4::h4GetTaskName(uint32_t id){ return h4TaskNames.count(id) ? h4TaskNames[id].data():"ANON"; }
 
 std::string H4::dumpTask(task* t,uint32_t faze){
+//    Serial.printf("H4::dumpTask 0x%08x Phase %d\n",t,faze);
     char buf[256];
     snprintf(buf,255,"T=%08u %s: Q=%02d 0x%08x %s/%s %s %10u(T%+10u) %10u %10u %10u L=%d",
         millis(),
@@ -114,7 +111,6 @@ std::string H4::dumpTask(task* t,uint32_t faze){
 void H4::dumpQ(){
     if(h4.size()){
 	    Serial.printf("           ACT   nQ    Handle   Type/name    Due @tick(T+         )        Min        Max        nRQ Len\n"); 
-//  reply("T=00003246 DEL: Q=00 0x3fff3114 seqn/CTRL         3217(         29)          0          0          0 L=0 U=0
         std::vector<task*> tlist=h4._copyQ();
         std::sort(tlist.begin(),tlist.end(),[](const task* a, const task* b){ return a->at < b->at; });
         for(auto const& t:tlist) Serial.printf("%s\n",dumpTask(t,0).data()); // faze=quiescent
@@ -184,9 +180,9 @@ uint32_t task::cleardown(uint32_t pass){
 	return pass;
 }
 
-void task::_destruct(){
+void task::_destruct(){ 
 #if H4_HOOK_TASKS
-    H4::taskHook(ME,4);
+    H4::taskHook(this,4);
 #endif
 	if(partial) free(partial);
     delete this;
@@ -312,15 +308,12 @@ bool H4::_unHook(uint32_t subid){
     return false;
 }
 
-#ifdef ARDUINO
-        void setup(){
-            h4StartPlugins();
-            h4setup();
-        }        
-        
-        void loop(){ h4.loop(); }
+void setup(){
+    h4StartPlugins();
+    h4setup();
+}        
 
-#endif
+void loop(){ h4.loop(); }
 
 void H4::cancelAll(H4_FN_VOID f){
     HAL_disableInterrupts();
@@ -361,26 +354,14 @@ H4_TASK_PTR H4::repeatWhileEver(H4_FN_COUNT fncd,uint32_t msec,H4_FN_VOID fn,H4_
 			TAG(13),s);
 }
 
-#ifndef __cplusplus
-extern "C" {
-#endif
-	void H4::loop(){
-        /* H4P 34900 - 35100
-        if(context=h4.next()){
-            (*context)();
-            context=nullptr;
-        }
-        */
-        h4.next();
-        for(auto const f:loopChain) f();
 
-#ifndef H4_NO_USERLOOP
-		h4UserLoop();
+void H4::loop(){
+    h4.next();
+    for(auto const f:loopChain) f();
+#if H4_USERLOOP
+    h4UserLoop();
 #endif
 #if H4_COUNT_LOOPS
-        h4Nloops++;
+    h4Nloops++;
 #endif
-	}
-#ifndef __cplusplus
 }
-#endif
