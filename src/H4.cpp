@@ -81,8 +81,9 @@ uint32_t h4Nloops=0;
     };
     const char* taskPhase[]={"IDL","NEW","SCH","OOQ","DIE"};
 
-std::string H4::h4GetTaskType(uint32_t e){ return taskTypes.count(e) ? taskTypes[e]:("????"); }
-const char* H4::h4GetTaskName(uint32_t id){ return h4TaskNames.count(id) ? h4TaskNames[id].data():"ANON"; }
+void H4::addTaskNames(H4_INT_MAP names){ h4TaskNames.insert(names.begin(),names.end()); }
+std::string H4::getTaskType(uint32_t e){ return taskTypes.count(e) ? taskTypes[e]:("????"); }
+const char* H4::getTaskName(uint32_t id){ return h4TaskNames.count(id) ? h4TaskNames[id].data():"ANON"; }
 
 std::string H4::dumpTask(task* t,uint32_t faze){
 //    Serial.printf("H4::dumpTask 0x%08x Phase %d\n",t,faze);
@@ -93,8 +94,8 @@ std::string H4::dumpTask(task* t,uint32_t faze){
         h4.size(),
         (void*) t,
 //        (void*) t->parent,
-        h4GetTaskType(t->uid/100).data(),
-        h4GetTaskName(t->uid%100),
+        getTaskType(t->uid/100).data(),
+        getTaskName(t->uid%100),
         t->singleton ? "S":" ",
         t->at,
         millis()-t->at,

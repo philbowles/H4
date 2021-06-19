@@ -34,7 +34,7 @@ SOFTWARE.
 
 #define H4_USERLOOP       0 // improves performance
 #define H4_COUNT_LOOPS    0 // DIAGNOSTICS
-#define H4_HOOK_TASKS     0
+#define H4_HOOK_TASKS     1
 
 #define H4_JITTER_LO    100 // Entropy lower bound
 #define H4_JITTER_HI    350 // Entropy upper bound
@@ -207,8 +207,11 @@ class H4: public std::priority_queue<task*, std::vector<task*>, task>{ // H4P 35
                 void            _hookTask(H4_FN_TASK f){ taskHook=f; }
         static  std::string     dumpTask(task* t,uint32_t faze);
         static  void            dumpQ();    
-        static  std::string     h4GetTaskType(uint32_t t);
-        static  const char*     h4GetTaskName(uint32_t t);
+        static  void            addTaskNames(H4_INT_MAP names);
+        static  std::string     getTaskType(uint32_t t);
+        static  const char*     getTaskName(uint32_t t);
+#else
+        static  void            addTaskNames(H4_INT_MAP names){}
 #endif
 
 //    public:
