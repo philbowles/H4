@@ -74,10 +74,7 @@ uint32_t h4Nloops=0;
         {11,"rnrn"}, // 11
         {12,"rptw"}, // 12
         {13,"rpwe"},
-        {14,"work"},
-        {15,"seqn"},
-        {16,"naev"},
-        {17,"naer"}
+        {14,"work"}
     };
     const char* taskPhase[]={"IDL","NEW","SCH","OOQ","DIE"};
 

@@ -30,7 +30,7 @@ SOFTWARE.
 #ifndef H4_H
 #define H4_H
 
-#define H4_VERSION  "3.0.1"
+#define H4_VERSION  "3.1.0"
 
 #define H4_USERLOOP       0 // improves performance
 #define H4_COUNT_LOOPS    0 // DIAGNOSTICS
@@ -43,7 +43,7 @@ SOFTWARE.
 
 #include <Arduino.h>
 
-#define h4rebootCore ESP.restart
+#define h4rebootCore ESP.restart 
 #define H4_BOARD ARDUINO_BOARD
 
 void h4reboot();
@@ -275,5 +275,4 @@ static void h4Chunker(T &x,std::function<void(typename T::iterator)> fn,uint32_t
     };
 
 }
-
 #endif // H4_H

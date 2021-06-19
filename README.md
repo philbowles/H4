@@ -320,13 +320,61 @@ Simply download the zip of this repository and install as an Arduino library: `S
 
 This section is for experts only.
 
-### Diagnostics / Task 
+### Diagnostics / Tasks 
 
 Call `h4reboot` to ...er... reboot the device
 
 Call `hookReboot(H4_FN_VOID f)` to add a function to be called just prior to reboot - this is useful for "cleaning up" / closing files, writing buffers etc. By default it will call `onReboot` so there is no need to explicilty hook that function.
 
-[Example Sketch](examples/advanced/hooks/hooks.ino)
+#### Functions
+
+* `addTaskNames`    // adds user task names to enable easier identification task/Q dumps
+* `dumpTask`        // get info per Q item
+* `dumpQ`           // call dumpTask for all Q items
+* `getTaskType`     // human-readable timer type
+* `getTaskName`     // human-readable timer name
+
+#### API
+
+```cpp
+#if H4_HOOK_TASKS
+        void            _hookTask(H4_FN_TASK f); // replace default task dumper with your own (see below)
+static  std::string     dumpTask(task* t,uint32_t faze); // called once per Q item to return formatted string of task details
+static  void            dumpQ(); //  call dumpTask for every item currently scheduled in the Q
+static  void            addTaskNames(H4_INT_MAP names); // adds users own task names to any existing names
+static  std::string     getTaskType(uint32_t t); // returns human-readable timer type (see below)
+static  const char*     getTaskName(uint32_t t); // returns task name or "ANON" if none
+
+
+    H4_FN_TASK H4::taskHook=[](task* t,uint32_t faze=0){ Serial.printf("%s\n",dumpTask(t,faze).data());  };
+
+    // faze is an index into :
+    const char* taskPhase[]={"IDL","NEW","SCH","OOQ","DIE"};
+    // IDL no event has occured, item is just being dimped by dumpQ(); its just "in the Q"
+    // NEW on task creation
+    // SCH in task being rescheduled
+    // OOQ task has dropped out-of-q ( next event will be DEL)
+    // DEL task is destroyed
+
+    H4_INT_MAP taskTypes={
+        {1,"link"},  // future use
+        {3,"evry"},  // h4.every(...
+        {4,"evrn"},  // h4.everyTandom(...
+        {5,"ntim"},  // h4.nTimes(...
+        {6,"ntrn"},  // h4.nTimesRandom(...
+        {7,"once"},  // h4.once(...
+        {8,"1xrn"},  // h4.onceRandom(...
+        {9,"qfun"},  // h4.queueFunction(...
+        {10,"rntx"}, // h4.randomTimes(...
+        {11,"rnrn"}, // h4.randomTimesRandom(...
+        {12,"rptw"}, // h4.repeatWhile(...
+        {13,"rpwe"}, // h4.repeatWhileEver(...
+        {99,"work"}  // chunker 
+    };
+
+#endif
+```
+
 
 ---
 
@@ -337,8 +385,6 @@ Some libraries require that you call a "loop" / "handle" / "keepalive" function 
 So, for these (and **only**) these, the optional `userLoop` callback exists. Define it and put the library handler function(s) inside it.
 
 If you have *any* other code inside the userLoop, *you are using H4 incorrectly and will not get support*.
-
-[Example Sketch](examples/advanced/tasknames/tasknames.ino)
 
 ---
 
@@ -366,7 +412,7 @@ That is just an example: the `h4Chunker` template function already does it for y
 
 ```cpp
 template<typename T>
-static void h4Chunker(T const& x,function<void(typename T::const_iterator)> fn);
+static void h4Chunker(T &x,std::function<void(typename T::iterator)> fn,uint32_t lo=H4_JITTER_LO,uint32_t hi=H4_JITTER_HI,H4_FN_VOID final=nullptr){
 
 /*
 Takes a data structure of type T and calls f with increasing values of an iterator until the iterator == T::end();
@@ -377,6 +423,8 @@ The millisecond time between consecutive calls is randomised to spread the load 
 
 #define H4_JITTER_LO    100
 #define H4_JITTER_HI    350
+
+final is a function to allow the user to cleanup, summarise results etc
 
 */
 
