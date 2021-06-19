@@ -105,7 +105,7 @@ class task{
             H4_FN_VOID     	chain;
             uint32_t		uid=0;
             bool 			singleton=false;
-
+            H4_FN_VOID      lastRites=[]{};
             size_t			len=0;
             uint32_t        at;
             uint32_t		nrq=0;
@@ -269,6 +269,11 @@ static void h4Chunker(T &x,std::function<void(typename T::iterator)> fn,uint32_t
         H4_CHUNKER_ID);
     typename T::iterator chunkIt=x.begin();
     p->createPartial((void *)&chunkIt, sizeof(typename T::iterator));
+    p->lastRites=[=]{
+        free(p->partial);
+        p->partial=nullptr;
+    };
+
 }
 
 #endif // H4_H

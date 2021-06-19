@@ -185,6 +185,7 @@ void task::_destruct(){
 #if H4_HOOK_TASKS
     H4::taskHook(this,4);
 #endif
+    lastRites();
 	if(partial) free(partial);
     delete this;
 }
