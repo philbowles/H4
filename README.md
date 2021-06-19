@@ -4,7 +4,7 @@
 
 ## Version 3.0.1
 
-[Release Notes 3.0.1](docs/rn301.md)
+[Release Notes 3.1.0](docs/rn310.md) 19/06/2021
 
 Functional scheduler in the form of an ArduinoIDE library providing timers for ESP8266 / ESP32 which can call:
 
