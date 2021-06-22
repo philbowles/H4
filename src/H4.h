@@ -34,7 +34,7 @@ SOFTWARE.
 
 #define H4_USERLOOP       0 // improves performance
 #define H4_COUNT_LOOPS    0 // DIAGNOSTICS
-#define H4_HOOK_TASKS     1
+#define H4_HOOK_TASKS     0
 
 #define H4_JITTER_LO    100 // Entropy lower bound
 #define H4_JITTER_HI    350 // Entropy upper bound
