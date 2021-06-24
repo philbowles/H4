@@ -31,10 +31,15 @@ These allow you to run multiple simultaneous* tasks without worrying about any o
 
 The following youtube videos may prove helpful:
 
+General Introduction / concepts
+
 * [Version 3 taster](https://www.youtube.com/watch?v=4ySOh0ukyrc)
 * [Why you need it](https://www.youtube.com/watch?v=OvOz3QPGoY0)
-* [Fundamentals of multitasking](https://www.youtube.com/watch?v=iUuqJJwOmvg)
-* [How to "chain" timers](https://youtu.be/flGNBtF72Ng)
+
+The "gray series" H4 plain and simple
+
+* [1. Fundamentals of multitasking](https://www.youtube.com/watch?v=iUuqJJwOmvg)
+* [2. How to "chain" timers](https://youtu.be/flGNBtF72Ng)
 
 ---
 
