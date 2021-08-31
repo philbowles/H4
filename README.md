@@ -355,7 +355,7 @@ static  const char*     getTaskName(uint32_t t); // returns task name or "ANON" 
 
     // faze is an index into :
     const char* taskPhase[]={"IDL","NEW","SCH","OOQ","DIE"};
-    // IDL no event has occured, item is just being dimped by dumpQ(); its just "in the Q"
+    // IDL no event has occured, item is just being dumped by dumpQ(); its just "in the Q"
     // NEW on task creation
     // SCH in task being rescheduled
     // OOQ task has dropped out-of-q ( next event will be DEL)
