@@ -1,37 +1,40 @@
 /*
- MIT License
+Creative Commons: Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)
+https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-Copyright (c) 2019 Phil Bowles <H48266@gmail.com>
-   github     https://github.com/philbowles/H4
-   blog       https://8266iot.blogspot.com
-   groups     https://www.facebook.com/groups/esp8266questions/
-              https://www.facebook.com/H4-Esp8266-Firmware-Support-2338535503093896/
+You are free to:
 
+Share — copy and redistribute the material in any medium or format
+Adapt — remix, transform, and build upon the material
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+The licensor cannot revoke these freedoms as long as you follow the license terms. Under the following terms:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+Attribution — You must give appropriate credit, provide a link to the license, and indicate if changes were made. 
+You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+NonCommercial — You may not use the material for commercial purposes.
+
+ShareAlike — If you remix, transform, or build upon the material, you must distribute your contributions 
+under the same license as the original.
+
+No additional restrictions — You may not apply legal terms or technological measures that legally restrict others 
+from doing anything the license permits.
+
+Notices:
+You do not have to comply with the license for elements of the material in the public domain or where your use is 
+permitted by an applicable exception or limitation. To discuss an exception, contact the author:
+
+philbowles2012@gmail.com
+
+No warranties are given. The license may not give you all of the permissions necessary for your intended use. 
+For example, other rights such as publicity, privacy, or moral rights may limit how you use the material.
 */
 #include <H4.h>
 
 #ifdef ARDUINO_ARCH_ESP32
-    portMUX_TYPE my_mutex = portMUX_INITIALIZER_UNLOCKED;
-    void HAL_enableInterrupts(){ portEXIT_CRITICAL(&my_mutex); }
-    void HAL_disableInterrupts(){ portENTER_CRITICAL(&my_mutex); }
+    portMUX_TYPE h4_mutex = portMUX_INITIALIZER_UNLOCKED;
+    void HAL_enableInterrupts(){ portEXIT_CRITICAL(&h4_mutex); }
+    void HAL_disableInterrupts(){ portENTER_CRITICAL(&h4_mutex); }
 #else
     void HAL_enableInterrupts(){ interrupts(); }
     void HAL_disableInterrupts(){ noInterrupts();}
@@ -60,6 +63,7 @@ uint32_t h4Nloops=0;
 
 #if H4_HOOK_TASKS
     H4_FN_TASK H4::taskHook=[](task* t,uint32_t faze=0){ Serial.printf("%s\n",dumpTask(t,faze).data());  };
+//    H4_FN_TASK H4::taskHook=[](task* t,uint32_t faze=0){ };
 
     H4_INT_MAP taskTypes={
         {1,"link"},
@@ -84,8 +88,8 @@ const char* H4::getTaskName(uint32_t id){ return h4TaskNames.count(id) ? h4TaskN
 
 std::string H4::dumpTask(task* t,uint32_t faze){
 //    Serial.printf("H4::dumpTask 0x%08x Phase %d\n",t,faze);
-    char buf[256];
-    snprintf(buf,255,"T=%08u %s: Q=%02d 0x%08x %s/%s %s %10u(T%+10u) %10u %10u %10u L=%d",
+    char buf[1024];
+    snprintf(buf,1023,"T=%08u %s: Q=%02d 0x%08x %s/%s %s %10u(T%+10d) %10u %10u %10u L=%d",
         millis(),
         taskPhase[faze],
         h4.size(),
@@ -95,7 +99,7 @@ std::string H4::dumpTask(task* t,uint32_t faze){
         getTaskName(t->uid%100),
         t->singleton ? "S":" ",
         t->at,
-        millis()-t->at,
+        (int)((int) (int) t->at - millis()),
         t->rmin,
         t->rmax,
         t->nrq,
@@ -115,7 +119,8 @@ void H4::dumpQ(){
         Serial.printf("\n");
     } else Serial.printf("QUEUE EMPTY\n");
 }
-
+#else
+void H4::dumpQ(){}
 #endif
 
 //
@@ -153,15 +158,15 @@ void task::operator()(){
 	else {
 		f();
 		if(reaper){ // it's finite
-		  if(!(reaper())){ // ...and it just ended
-			_chain(); // run chain function if there is one
-			if((rmin==rmax) && rmin){
-				rmin=86400000; // reque in +24 hrs
-				rmax=0;
-				reaper=nullptr; // and every day after
-				requeue();
-			} else _destruct();
-		  } else requeue();
+		    if(!(reaper())){ // ...and it just ended
+                _chain(); // run chain function if there is one
+                if((rmin==rmax) && rmin){
+                    rmin=86400000; // reque in +24 hrs
+                    rmax=0;
+                    reaper=nullptr; // and every day after
+                    requeue();
+                } else _destruct();
+		    } else requeue();
 		} else requeue();
 	}
 }
@@ -188,12 +193,14 @@ void task::_destruct(){
 }
 //		The many ways to die... :)
 uint32_t task::endF(){
+//    Serial.printf("ENDF %p\n",this);
 	reaper=H4Countdown(1);
 	at=0;
 	return cleardown(1+nrq);
 }
 
 uint32_t task::endU(){
+//    Serial.printf("ENDU %p\n",this);
 	_chain();
 	return nrq+endK();
 }
@@ -205,6 +212,7 @@ uint32_t task::endC(H4_FN_TIF f){
 }
 
 uint32_t task::endK(){
+//    Serial.printf("ENDK %p\n",this);
 	harakiri=true;
 	return cleardown(at=0);
 }
@@ -246,31 +254,13 @@ uint32_t H4::gpFramed(task* t,H4_FN_RTPTR f){
 	return rv;
 }
 
-uint32_t H4::endF(task* t){ return gpFramed(t,std::bind(&task::endF,t)); }
+uint32_t H4::endF(task* t){ return gpFramed(t,[=]{ return t->endF(); }); }
 
-uint32_t H4::endU(task* t){	return gpFramed(t,std::bind(&task::endU,t)); }
+uint32_t H4::endU(task* t){ return gpFramed(t,[=]{ return t->endU(); }); }
 
-bool 	 H4::endC(task* t,H4_FN_TIF f){ return static_cast<bool>(gpFramed(t,std::bind(&task::endC,t,f))); }
+bool 	 H4::endC(task* t,H4_FN_TIF f){ return gpFramed(t,[=]{ return t->endC(f); }); }
 
-task* 	 H4::endK(task* t){ return reinterpret_cast<task*>(gpFramed(t,std::bind(&task::endK,t))); }
-
-task* H4::next(){
-	task* t=nullptr;
-    uint32_t now=(uint32_t) millis(); // can't do inside loop...clocks dont work when HAL_disableInterrupts()!!!
-	HAL_disableInterrupts();
-	if(size()){
-	   if(((int)(top()->at -  now)) < 1) {
-		t=top();
-		pop();
-	  }
-	}
-	HAL_enableInterrupts();
-	if(t){ // H4P 35000 35100
-        H4::context=t;
-        (*t)();
-    };
-	return t;
-}
+task* 	 H4::endK(task* t){ return reinterpret_cast<task*>(gpFramed(t,[=]{ return t->endK(); })); }
 
 void H4::qt(task* t){
 	HAL_disableInterrupts();
@@ -312,7 +302,9 @@ void setup(){
     h4setup();
 }        
 
-void loop(){ h4.loop(); }
+void loop(){ 
+    h4.loop();
+}
 
 void H4::cancelAll(H4_FN_VOID f){
     HAL_disableInterrupts();
@@ -355,7 +347,24 @@ H4_TASK_PTR H4::repeatWhileEver(H4_FN_COUNT fncd,uint32_t msec,H4_FN_VOID fn,H4_
 
 
 void H4::loop(){
-    h4.next();
+	task* t=nullptr;
+    uint32_t now=(uint32_t) millis(); // can't do inside loop...clocks dont work when HAL_disableInterrupts()!!!
+	HAL_disableInterrupts();
+	if(size()){
+        if(((int)(top()->at -  now)) < 1) {
+            t=top();
+            pop();
+        }
+	}
+	HAL_enableInterrupts();
+	if(t){ // H4P 35000 35100
+        H4::context=t;
+//        Serial.printf("T=%u H4context <-- %p\n",millis(),t);
+        (*t)();
+//        Serial.printf("T=%u H4context --> %p\n",millis(),t);
+//        dumpQ();
+    };
+//
     for(auto const f:loopChain) f();
 #if H4_USERLOOP
     h4UserLoop();
