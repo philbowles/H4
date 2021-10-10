@@ -1,12 +1,22 @@
-![H4 Flyer](/assets/logo.jpg)
+![H4 Flyer](/assets/maslow_h4.jpg)
 
 ---
 
-## Version 3.1.0
+Licence: ![licence](https://i.creativecommons.org/l/by-nc-sa/4.0/80x15.png) Creative Commons: Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0) [Legal Text](https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode)
 
-[Release Notes 3.1.0](docs/rn310.md) 20/06/2021
+# ***N.B. This licence expressly prohibits commercial use***
 
-Functional scheduler in the form of an ArduinoIDE library providing timers for ESP8266 / ESP32 which can call:
+---
+
+## Version 4.0.0 6/8/2021
+
+License changed to Creative Commons: Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)
+
+---
+
+H4 is a simple way of doing multiple things / "tasks" / "processes" at the same time on ESP8266 and ESP32. It is the base of any IOT app you want to build if the app needs to to do more than one thing at a time - which most do!
+
+Technically-speaking, it is a "Functional scheduler" in the form of an ArduinoIDE library providing timers for ESP8266 / ESP32 which can call:
 
 * Normal functions
 * Class functions
@@ -45,7 +55,7 @@ The "gray series" H4 plain and simple
 
 ## Why do I need it?
 
-*Successfully* running multiple simultaneous* tasks on most embedded MCUs is notoriously difficult. It usually requires either a ready-made RTOS (e.g. freeRTOS) or a great deal of experience of low-level C/C++ programming and an intimate knowledge of the MCU timer architecture. Both require an intimidating learning curve and most beginners have little knowledge of either.
+*Successfully* running multiple simultaneous* tasks on most embedded MCUs is notoriously difficult. It usually requires either a ready-made RTOS (e.g. freeRTOS) or a great deal of experience of low-level C/C++ programming and an intimate knowledge of the MCU timer architecture. Both have an intimidating learning curve and most beginners have little knowledge of either.
 
 To make matters worse, the vast majority of examples available are simple one-function "proof of concept" demos written without any concept of resource sharing. Trying to combine two such examples that require co-operation but are written with none is a recipe that leads inevitably to crashes, reboots and "random" failures, often dispiritng and/or deterring the newcomer.
 
