@@ -8,7 +8,7 @@ Licence: ![licence](https://i.creativecommons.org/l/by-nc-sa/4.0/80x15.png) Crea
 
 ---
 
-## Version 4.0.0 6/8/2021
+## Version 4.0.0 12/10/2021
 
 License changed to Creative Commons: Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)
 
@@ -54,6 +54,8 @@ The "gray series" H4 plain and simple
 ---
 
 ## Why do I need it?
+
+Watch the video! * [Why you need it](https://www.youtube.com/watch?v=OvOz3QPGoY0)
 
 *Successfully* running multiple simultaneous* tasks on most embedded MCUs is notoriously difficult. It usually requires either a ready-made RTOS (e.g. freeRTOS) or a great deal of experience of low-level C/C++ programming and an intimate knowledge of the MCU timer architecture. Both have an intimidating learning curve and most beginners have little knowledge of either.
 
@@ -323,11 +325,22 @@ bool finishIf(H4_TASK_PTR t, H4_FN_TIF f);
 ---
 
 ## Installation
+### Prerequisites
+
+The library has been tested using the following firmware. Please do not even *think* about raising anhy issues unless you have the following correctly installed.
+
+* [ESP8266 core 3.0.2](https://github.com/esp8266/Arduino)
+* [ESP32 core 2.0.0](https://github.com/espressif/arduino-esp32)
+* [ArduinoIDE 1.8.16](https://www.arduino.cc/en/software)
+
+***N.B.***
+
+Note that PlatformIO is not in the above list. Many folk *do* use it, but you will need to create your own installation configuration.
+I am currently in discussions to add a PIO install to the standard [H4 Installer](https://github.com/philbowles/h4installer). If you are able to help / contribute to this, please get in touch!
 
 ### Arduino IDE
 
 Simply download the zip of this repository and install as an Arduino library: `Sketch/Include Library/Add .ZIP Library...`
-
 
 ---
 
