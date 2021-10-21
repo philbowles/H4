@@ -14,6 +14,10 @@ License changed to Creative Commons: Attribution-NonCommercial-ShareAlike 4.0 In
 
 ---
 
+## If you are able, please [Support me on Patreon](https://patreon.com/esparto) or [PayPal](https://www.paypal.com/paypalme/h4plugins) and/or subscribe to my [Youtube channel (instructional videos)](https://www.youtube.com/channel/UCYi-Ko76_3p9hBUtleZRY6g)
+
+---
+
 H4 is a simple way of doing multiple things / "tasks" / "processes" at the same time on ESP8266 and ESP32. It is the base of any IOT app you want to build if the app needs to to do more than one thing at a time - which most do!
 
 Technically-speaking, it is a "Functional scheduler" in the form of an ArduinoIDE library providing timers for ESP8266 / ESP32 which can call:
